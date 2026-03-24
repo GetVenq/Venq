@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Venq — Venue Quote Software</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap');
+
+:root {
+  --cream: #faf8f4; --warm: #f5f2ec; --border: #e0d8cc;
+  --charcoal: #1a1814; --mid: #4a4540; --light: #9a9088;
+  --gold: #b8965a; --gold-l: #d4b07a; --gold-d: #8a6e3e;
+  --surface: #ffffff; --red: #e05252;
+  --P: #1a1814; --A: #b8965a; --AL: #d4b07a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Jost',sans-serif; background:var(--cream); color:var(--charcoal); min-height:100vh; }
+
+/* ── HEADER ── */
+#hdr { background:var(--P); padding:0 32px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.logo { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:600; color:var(--AL); letter-spacing:.06em; }
+.logo-sub { font-size:10px; color:var(--light); letter-spacing:.2em; text-transform:uppercase; margin-left:10px; }
+.hdr-save { font-family:'Jost',sans-serif; font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; padding:7px 14px; border-radius:3px; cursor:pointer; border:1px solid rgba(255,255,255,.2); background:transparent; color:rgba(255,255,255,.7); transition:all .2s; }
+.hdr-save:hover { border-color:var(--A); color:var(--AL); }
+.dots { display:flex; gap:6px; align-items:center; }
+.dot { width:8px; height:8px; border-radius:50%; background:var(--mid); transition:background .3s; }
+.dot.on { background:var(--A); }
+.dot.done { background:var(--gold-d); }
+
+/* ── NAV ── */
+#nav { background:var(--charcoal); padding:0 32px; display:flex; border-bottom:1px solid #2a2520; }
+.ntab { font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; padding:12px 18px; cursor:pointer; color:var(--light); border-bottom:2px solid transparent; transition:all .2s; white-space:nowrap; }
+.ntab:hover { color:white; }
+.ntab.on { color:var(--AL); border-bottom-color:var(--A); }
+.nbadge { font-size:10px; background:rgba(184,150,90,.3); padding:1px 6px; border-radius:10px; margin-left:4px; }
+
+/* ── VIEWS ── */
+.view { display:none; }
+.view.on { display:block; }
+#view-quote { display:none; }
+#view-quote.on { display:grid; grid-template-columns:1fr 360px; max-width:1160px; margin:0 auto; padding:0 24px; gap:40px; min-height:calc(100vh - 104px); }
+
+/* ── FORM ── */
+.form-col { padding:36px 0; }
+.vstep { display:none; }
+.vstep.on { display:block; animation:fadeUp .3s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.slabel { font-size:11px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:var(--A); margin-bottom:6px; }
+.stitle { font-family:'Cormorant Garamond',serif; font-size:34px; font-weight:400; margin-bottom:28px; line-height:1.2; }
+.divider { display:flex; align-items:center; gap:14px; margin:24px 0 18px; }
+.divider span { font-size:10px; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--light); white-space:nowrap; }
+.divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+.fg2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.fg1 { display:grid; grid-template-columns:1fr; gap:14px; }
+.fg3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+.fgrp { display:flex; flex-direction:column; gap:5px; }
+.fgrp.full { grid-column:1/-1; }
+.fgrp label { font-size:10px; font-weight:500; letter-spacing:.12em; text-transform:uppercase; color:var(--mid); }
+.fi { font-family:'Jost',sans-serif; font-size:14px; color:var(--charcoal); background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:10px 13px; outline:none; transition:border-color .2s,box-shadow .2s; width:100%; }
+.fi:focus { border-color:var(--A); box-shadow:0 0 0 3px rgba(184,150,90,.1); }
+.fi.err { border-color:var(--red) !important; box-shadow:0 0 0 3px rgba(224,82,82,.1) !important; }
+textarea.fi { resize:vertical; min-height:72px; }
+select.fi { cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239a9088' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:32px; }
+
+/* ── EVENT TYPE CARDS ── */
+.et-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:24px; }
+.et-card { border:1px solid var(--border); border-radius:8px; padding:18px 14px; text-align:center; cursor:pointer; transition:all .2s; background:var(--surface); }
+.et-card:hover { border-color:var(--gold-l); }
+.et-card.on { border-color:var(--A); background:rgba(184,150,90,.06); }
+.et-icon { font-size:26px; margin-bottom:6px; }
+.et-name { font-size:13px; font-weight:500; }
+.et-sub { font-size:10px; color:var(--light); margin-top:2px; }
+
+/* ── PACKAGE CARDS ── */
+.pkg-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px; }
+.pkg-card { border:1px solid var(--border); border-radius:8px; padding:16px; cursor:pointer; transition:all .2s; background:var(--surface); position:relative; }
+.pkg-card:hover { border-color:var(--gold-l); }
+.pkg-card.on { border-color:var(--A); background:rgba(184,150,90,.06); }
+.pkg-card.on::after { content:'✓'; position:absolute; top:10px; right:12px; color:var(--A); font-size:13px; font-weight:600; }
+.pkg-name { font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:500; margin-bottom:3px; }
+.pkg-price { font-size:19px; font-weight:600; color:var(--A); margin-bottom:6px; }
+.pkg-price span { font-size:11px; font-weight:400; color:var(--light); }
+.pkg-incl { font-size:11px; color:var(--mid); line-height:1.6; }
+.pkg-est { margin-top:8px; font-size:11px; color:var(--A); font-weight:500; }
+.pkg-empty { grid-column:1/-1; text-align:center; padding:36px; border:2px dashed var(--border); border-radius:8px; color:var(--light); font-size:13px; }
+.pkg-empty a { color:var(--A); cursor:pointer; text-decoration:underline; }
+
+/* ── ADD-ONS ── */
+.ao-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.ao-item { display:flex; align-items:center; gap:9px; padding:10px 12px; border:1px solid var(--border); border-radius:6px; cursor:pointer; transition:all .2s; background:var(--surface); }
+.ao-item:hover { border-color:var(--gold-l); }
+.ao-item.on { border-color:var(--A); background:rgba(184,150,90,.06); }
+.ao-chk { width:16px; height:16px; border:1.5px solid var(--border); border-radius:3px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:10px; transition:all .2s; }
+.ao-item.on .ao-chk { background:var(--A); border-color:var(--A); color:white; }
+.ao-name { font-size:12px; font-weight:500; }
+.ao-price { font-size:11px; color:var(--A); font-weight:500; }
+
+/* ── NAV BUTTONS ── */
+.fnav { display:flex; justify-content:space-between; align-items:center; margin-top:32px; padding-top:20px; border-top:1px solid var(--border); }
+.btn { font-family:'Jost',sans-serif; font-size:12px; font-weight:500; letter-spacing:.08em; padding:11px 24px; border-radius:4px; cursor:pointer; transition:all .2s; border:none; text-transform:uppercase; }
+.btn-p { background:var(--P); color:var(--AL); }
+.btn-p:hover { opacity:.85; }
+.btn-a { background:var(--A); color:white; }
+.btn-a:hover { background:var(--gold-d); }
+.btn-g { background:transparent; color:var(--mid); border:1px solid var(--border); }
+.btn-g:hover { border-color:var(--A); color:var(--A); }
+.btn-sm { font-size:10px; padding:6px 12px; }
+.btn-del { font-size:10px; padding:5px 10px; background:transparent; border:1px solid #e8c0bc; color:#c0392b; border-radius:3px; cursor:pointer; font-family:'Jost',sans-serif; transition:all .2s; }
+.btn-del:hover { background:#fdf0ef; }
+
+/* ── ERROR MSG ── */
+.errmsg { background:#fdf0f0; border:1px solid #f5c0c0; border-radius:6px; padding:11px 14px; font-size:12px; color:#c0392b; margin-top:14px; display:none; }
+.errmsg.on { display:block; animation:fadeUp .3s ease; }
+
+/* ── GST TOGGLE ── */
+.gst-row { display:flex; align-items:center; gap:10px; padding:10px 13px; background:var(--surface); border:1px solid var(--border); border-radius:4px; }
+.gst-row label { font-size:13px; color:var(--charcoal); text-transform:none; letter-spacing:0; font-weight:400; cursor:pointer; display:flex; align-items:center; gap:8px; }
+.gst-row input[type=checkbox] { width:15px; height:15px; padding:0; cursor:pointer; }
+.gst-note { margin-left:auto; font-size:11px; color:var(--light); }
+
+/* ── PREVIEW ── */
+.prev-col { padding:36px 0; position:sticky; top:104px; height:fit-content; }
+.prev-lbl { font-size:10px; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:var(--light); margin-bottom:14px; }
+.qprev { background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; box-shadow:0 4px 20px rgba(26,24,20,.08); }
+.qp-hdr { background:var(--P); padding:18px 22px; display:flex; justify-content:space-between; align-items:flex-start; }
+.qp-logo { font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:600; color:var(--AL); letter-spacing:.05em; }
+.qp-logo-img { max-height:40px; max-width:120px; object-fit:contain; display:none; }
+.qp-vname { font-size:11px; font-weight:500; color:rgba(255,255,255,.6); margin-top:3px; }
+.qp-meta { text-align:right; font-size:10px; color:rgba(255,255,255,.4); line-height:1.9; }
+.qp-bar { height:3px; background:linear-gradient(90deg,var(--gold-d),var(--AL),var(--gold-d)); }
+.qp-body { padding:18px 22px; }
+.qp-etitle { font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:400; margin-bottom:2px; }
+.qp-esub { font-size:10px; color:var(--light); margin-bottom:14px; }
+.qp-dg { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:12px; background:var(--warm); border-radius:5px; margin-bottom:14px; }
+.qp-di label { font-size:9px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--light); display:block; margin-bottom:1px; }
+.qp-di span { font-size:11px; color:var(--charcoal); font-weight:500; }
+.qp-lines { margin-bottom:12px; }
+.qp-line { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); font-size:11px; }
+.qp-line:last-child { border-bottom:none; }
+.qp-ln { color:var(--mid); }
+.qp-lp { font-weight:500; }
+.qp-total { background:var(--P); border-radius:5px; padding:11px 14px; display:flex; justify-content:space-between; align-items:center; }
+.qp-tlbl { font-size:9px; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:rgba(255,255,255,.4); }
+.qp-tamt { font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--AL); }
+.qp-tgst { font-size:9px; color:rgba(255,255,255,.35); margin-top:2px; }
+.qp-foot { padding:12px 22px; border-top:1px solid var(--border); display:flex; justify-content:space-between; font-size:10px; }
+.qp-fcontact { color:var(--light); line-height:1.7; }
+.qp-fvalid { color:var(--A); font-weight:500; }
+.qp-payment { padding:14px 22px; border-top:1px solid var(--border); background:var(--warm); display:none; }
+.qp-pmt-title { font-size:9px; font-weight:600; letter-spacing:.15em; text-transform:uppercase; color:var(--light); margin-bottom:8px; }
+.qp-pmt-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px; }
+.qp-pmt-item label { font-size:9px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--light); display:block; }
+.qp-pmt-item span { font-size:11px; font-weight:500; }
+.qp-pmt-note { font-size:10px; color:var(--mid); line-height:1.6; margin-bottom:8px; }
+.qp-stripe { display:none; background:var(--P); color:var(--AL); font-family:'Jost',sans-serif; font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; padding:9px 16px; border-radius:3px; text-decoration:none; text-align:center; }
+.prev-btns { display:flex; gap:8px; margin-top:12px; }
+.prev-btns .btn { flex:1; text-align:center; font-size:10px; padding:9px; }
+
+/* ── HISTORY ── */
+.hpanel { padding:28px 32px; max-width:1100px; margin:0 auto; }
+.panel-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.panel-title { font-family:'Cormorant Garamond',serif; font-size:30px; font-weight:400; }
+.panel-sub { font-size:12px; color:var(--light); margin-bottom:24px; }
+.qcard { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px 20px; margin-bottom:8px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.qcard:hover { border-color:var(--A); }
+.qc-id { font-size:11px; font-weight:600; color:var(--A); letter-spacing:.08em; min-width:90px; }
+.qc-client { font-size:14px; font-weight:500; flex:1; min-width:120px; }
+.qc-venue { font-size:10px; color:var(--light); }
+.qc-meta { font-size:11px; color:var(--light); flex:1; min-width:100px; }
+.qc-type { font-size:10px; color:var(--mid); background:var(--warm); padding:3px 9px; border-radius:11px; border:1px solid var(--border); white-space:nowrap; }
+.qc-total { font-family:'Cormorant Garamond',serif; font-size:19px; color:var(--A); min-width:80px; text-align:right; }
+.qc-status { font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; padding:3px 9px; border-radius:11px; }
+.qc-status.draft { background:rgba(154,144,136,.15); color:var(--light); }
+.qc-status.sent { background:rgba(184,150,90,.15); color:var(--gold-d); }
+.qc-status.accepted { background:rgba(39,174,96,.15); color:#27ae60; }
+.qc-sel { font-size:11px; padding:4px 8px; border:1px solid var(--border); border-radius:3px; cursor:pointer; background:white; font-family:'Jost',sans-serif; }
+.qc-btn { font-size:10px; padding:5px 10px; border-radius:3px; cursor:pointer; border:1px solid var(--border); background:transparent; color:var(--mid); transition:all .2s; font-family:'Jost',sans-serif; }
+.qc-btn:hover { border-color:var(--A); color:var(--A); }
+.qc-btn.del:hover { border-color:#e8c0bc; color:#c0392b; }
+.empty { text-align:center; padding:48px; color:var(--light); }
+.empty-icon { font-size:36px; margin-bottom:10px; }
+
+/* ── PACKAGE BUILDER ── */
+.abpanel { padding:28px 32px; max-width:1100px; margin:0 auto; }
+.et-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; }
+.et-tab { font-size:11px; font-weight:500; padding:7px 14px; border:1px solid var(--border); border-radius:16px; cursor:pointer; transition:all .2s; background:var(--surface); color:var(--mid); }
+.et-tab:hover { border-color:var(--A); color:var(--A); }
+.et-tab.on { background:var(--P); color:var(--AL); border-color:var(--P); }
+.bc-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+.bcard { background:var(--surface); border:1px solid var(--border); border-radius:9px; overflow:hidden; }
+.bcard:hover { border-color:var(--A); }
+.bcard-hdr { background:var(--warm); padding:12px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); }
+.bcard-title { font-family:'Cormorant Garamond',serif; font-size:16px; font-weight:500; }
+.bcard-body { padding:14px 16px; display:flex; flex-direction:column; gap:10px; }
+.bcf { display:flex; flex-direction:column; gap:3px; }
+.bcf label { font-size:9px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--light); }
+.bci { font-family:'Jost',sans-serif; font-size:13px; color:var(--charcoal); background:var(--cream); border:1px solid var(--border); border-radius:3px; padding:7px 9px; outline:none; width:100%; transition:border-color .2s; }
+.bci:focus { border-color:var(--A); }
+.bci-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.bci-ta { min-height:56px; resize:vertical; }
+.bc-hint { font-size:10px; color:var(--light); }
+.bc-add { border:2px dashed var(--border); border-radius:9px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:180px; cursor:pointer; transition:all .2s; gap:8px; }
+.bc-add:hover { border-color:var(--A); background:rgba(184,150,90,.02); }
+.bc-add-icon { font-size:28px; color:var(--border); }
+.bc-add-lbl { font-size:12px; color:var(--light); }
+.ao-builder { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+.aob-card { background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+.aob-card:hover { border-color:var(--A); }
+.aob-hdr { display:flex; justify-content:space-between; align-items:center; }
+.aob-name { font-size:12px; font-weight:500; }
+.rh-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+.rh-card { background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:14px; }
+.rh-card:hover { border-color:var(--A); }
+.info-box { background:rgba(184,150,90,.08); border:1px solid rgba(184,150,90,.25); border-radius:7px; padding:12px 16px; font-size:12px; color:var(--mid); margin-bottom:18px; line-height:1.6; }
+.info-box strong { color:var(--gold-d); }
+
+/* ── BRANDING ── */
+.brpanel { padding:28px 32px; max-width:720px; margin:0 auto; }
+.logo-zone { border:2px dashed var(--border); border-radius:7px; padding:24px; text-align:center; cursor:pointer; transition:all .2s; background:var(--surface); position:relative; }
+.logo-zone:hover { border-color:var(--A); }
+.logo-zone.has { border-style:solid; border-color:var(--A); }
+.logo-prev { max-height:56px; max-width:180px; object-fit:contain; margin:0 auto 8px; display:none; }
+.swatches { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:14px; }
+.swatch { border:2px solid transparent; border-radius:7px; padding:10px 6px; text-align:center; cursor:pointer; transition:all .2s; }
+.swatch:hover { transform:translateY(-2px); }
+.swatch.on { border-color:var(--charcoal); }
+.swatch-bar { height:20px; border-radius:3px; margin-bottom:5px; }
+.swatch-name { font-size:9px; font-weight:500; color:var(--mid); }
+.cpickers { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+.cpg { display:flex; flex-direction:column; gap:3px; align-items:center; }
+.cpg label { font-size:9px; color:var(--mid); }
+input[type=color] { width:40px; height:32px; padding:2px; border-radius:3px; cursor:pointer; border:1px solid var(--border); }
+
+/* ── EMAIL MODAL ── */
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(3px); z-index:200; display:none; align-items:center; justify-content:center; }
+.overlay.on { display:flex; }
+.modal { background:var(--surface); border-radius:10px; padding:28px; width:480px; max-width:90vw; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+.modal-title { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:400; margin-bottom:18px; }
+.eprev { background:var(--warm); border:1px solid var(--border); border-radius:5px; padding:14px; font-size:12px; line-height:1.7; color:var(--mid); margin:14px 0; white-space:pre-wrap; max-height:190px; overflow-y:auto; }
+.modal-btns { display:flex; gap:8px; margin-top:20px; }
+.modal-btns .btn { flex:1; text-align:center; }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--charcoal); color:var(--AL); padding:11px 22px; border-radius:4px; font-size:12px; z-index:999; transition:transform .3s; white-space:nowrap; pointer-events:none; }
+.toast.on { transform:translateX(-50%) translateY(0); }
+
+/* ── PRINT ── */
+@media print {
+  @page { margin:12mm 14mm; size:A4; }
+  #hdr,#nav,.form-col,.prev-lbl,.prev-btns,.overlay,.toast { display:none !important; }
+  #view-quote { display:block !important; grid-template-columns:1fr !important; padding:0 !important; max-width:100% !important; }
+  .prev-col { position:static; padding:0; width:100%; }
+  .qprev { border:none; box-shadow:none; width:100%; }
+  .qp-hdr,.qp-bar,.qp-dg,.qp-total,.qp-payment { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .qp-stripe { display:none !important; }
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div style="display:flex;align-items:baseline;">
+    <span class="logo">Venq</span>
+    <span class="logo-sub">Venue Quote Software</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <div class="dots" id="stepdots">
+      <div class="dot on" id="dot-0"></div>
+      <div class="dot" id="dot-1"></div>
+      <div class="dot" id="dot-2"></div>
+      <div class="dot" id="dot-3"></div>
+    </div>
+    <button class="hdr-save" onclick="saveQuote()">💾 Save</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<div id="nav">
+  <div class="ntab on" id="ntab-quote" onclick="showView('quote')">New Quote</div>
+  <div class="ntab" id="ntab-history" onclick="showView('history')">History <span class="nbadge" id="hbadge">0</span></div>
+  <div class="ntab" id="ntab-packages" onclick="showView('packages')">📦 Package Builder</div>
+  <div class="ntab" id="ntab-branding" onclick="showView('branding')">🎨 Branding</div>
+</div>
+
+<!-- ═══ QUOTE VIEW ═══ -->
+<div class="view on" id="view-quote">
+  <div class="form-col">
+
+    <!-- STEP 0 -->
+    <div class="vstep on" id="vstep-0">
+      <div class="slabel">Step 1 of 4</div>
+      <div class="stitle">Venue & Client Details</div>
+      <div class="divider"><span>Your Venue</span></div>
+      <div class="fg2">
+        <div class="fgrp full"><label>Venue Name *</label><input class="fi" id="f-vname" type="text" placeholder="e.g. Public House Rooftop"></div>
+        <div class="fgrp"><label>Contact Name</label><input class="fi" id="f-vcontact" type="text" placeholder="e.g. Lucas Reid"></div>
+        <div class="fgrp"><label>Phone</label><input class="fi" id="f-vphone" type="text" placeholder="0400 000 000"></div>
+        <div class="fgrp full"><label>Email</label><input class="fi" id="f-vemail" type="email" placeholder="events@yourvenue.com.au"></div>
+      </div>
+      <div class="divider"><span>Client Details</span></div>
+      <div class="fg2">
+        <div class="fgrp"><label>Client Name *</label><input class="fi" id="f-cname" type="text" placeholder="e.g. Sarah Johnson"></div>
+        <div class="fgrp"><label>Client Phone</label><input class="fi" id="f-cphone" type="text"></div>
+        <div class="fgrp full"><label>Client Email</label><input class="fi" id="f-cemail" type="email"></div>
+      </div>
+      <div class="errmsg" id="err-0"></div>
+      <div class="fnav"><div></div><button class="btn btn-p" onclick="goNext()">Continue →</button></div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="vstep" id="vstep-1">
+      <div class="slabel">Step 2 of 4</div>
+      <div class="stitle">Event Details</div>
+      <div class="divider"><span>Event Type</span></div>
+      <div class="et-grid" id="et-grid"></div>
+      <div class="divider"><span>When & How Many</span></div>
+      <div class="fg2">
+        <div class="fgrp"><label>Event Date *</label><input class="fi" id="f-date" type="date"></div>
+        <div class="fgrp"><label>Day</label><input class="fi" id="f-day" type="text" readonly style="color:var(--light)"></div>
+        <div class="fgrp"><label>Start Time</label><input class="fi" id="f-start" type="time" value="18:00"></div>
+        <div class="fgrp"><label>End Time</label><input class="fi" id="f-end" type="time" value="23:00"></div>
+        <div class="fgrp"><label>Guest Count *</label><input class="fi" id="f-guests" type="number" placeholder="e.g. 80" min="1"></div>
+        <div class="fgrp"><label>Space / Area</label><select class="fi" id="f-space"><option value="">Select area...</option></select></div>
+      </div>
+      <div class="errmsg" id="err-1"></div>
+      <div class="fnav">
+        <button class="btn btn-g" onclick="goPrev()">← Back</button>
+        <button class="btn btn-p" onclick="goNext()">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="vstep" id="vstep-2">
+      <div class="slabel">Step 3 of 4</div>
+      <div class="stitle">Package Selection</div>
+      <div class="divider"><span>Choose a Package</span></div>
+      <div class="pkg-grid" id="pkg-grid"></div>
+      <div class="divider"><span>Add-Ons</span></div>
+      <div class="ao-grid" id="ao-grid"></div>
+      <div class="errmsg" id="err-2"></div>
+      <div class="fnav">
+        <button class="btn btn-g" onclick="goPrev()">← Back</button>
+        <button class="btn btn-p" onclick="goNext()">Continue →</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="vstep" id="vstep-3">
+      <div class="slabel">Step 4 of 4</div>
+      <div class="stitle">Notes & Finalise</div>
+      <div class="fg1">
+        <div class="fgrp"><label>Special Requests / Notes</label><textarea class="fi" id="f-notes" placeholder="Dietary requirements, theming, AV needs..."></textarea></div>
+        <div class="fgrp"><label>Deposit Required ($)</label><input class="fi" id="f-deposit" type="number" placeholder="e.g. 500"></div>
+        <div class="fgrp"><label>GST</label>
+          <div class="gst-row">
+            <label><input type="checkbox" id="f-gst"> Add GST (10%) to total</label>
+            <span class="gst-note" id="gst-note"></span>
+          </div>
+        </div>
+        <div class="fgrp"><label>Quote Valid Until</label><input class="fi" id="f-valid" type="date"></div>
+        <div class="fgrp"><label>Terms & Conditions</label><textarea class="fi" id="f-terms"></textarea></div>
+      </div>
+      <div class="fnav">
+        <button class="btn btn-g" onclick="goPrev()">← Back</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-g" onclick="saveQuote()">💾 Save</button>
+          <button class="btn btn-g" onclick="openEmail()">✉ Email</button>
+          <button class="btn btn-p" onclick="doPrint()">🖨 PDF</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /form-col -->
+
+  <!-- PREVIEW -->
+  <div class="prev-col">
+    <div class="prev-lbl">Live Preview</div>
+    <div class="qprev">
+      <div class="qp-hdr">
+        <div>
+          <img class="qp-logo-img" id="pv-logoimg" src="" alt="">
+          <div class="qp-logo" id="pv-logotext">Venq</div>
+          <div class="qp-vname" id="pv-vname">Your Venue</div>
+        </div>
+        <div class="qp-meta">
+          <div id="pv-qnum"></div>
+          <div id="pv-today"></div>
+          <div id="pv-validlbl"></div>
+        </div>
+      </div>
+      <div class="qp-bar"></div>
+      <div class="qp-body">
+        <div class="qp-etitle" id="pv-etitle">Event Proposal</div>
+        <div class="qp-esub" id="pv-esub">Fill in details to see your quote</div>
+        <div class="qp-dg">
+          <div class="qp-di"><label>Client</label><span id="pv-client">—</span></div>
+          <div class="qp-di"><label>Date</label><span id="pv-date">—</span></div>
+          <div class="qp-di"><label>Time</label><span id="pv-time">—</span></div>
+          <div class="qp-di"><label>Guests</label><span id="pv-guests">—</span></div>
+          <div class="qp-di"><label>Space</label><span id="pv-space">—</span></div>
+          <div class="qp-di"><label>Duration</label><span id="pv-dur">—</span></div>
+        </div>
+        <div class="qp-lines" id="pv-lines">
+          <div class="qp-line"><span class="qp-ln" style="color:var(--border);font-style:italic;">Select a package to see pricing</span></div>
+        </div>
+        <div class="qp-total">
+          <div>
+            <div class="qp-tlbl">Total Investment</div>
+            <div class="qp-tgst" id="pv-gstline"></div>
+          </div>
+          <div class="qp-tamt" id="pv-total">$0.00</div>
+        </div>
+      </div>
+      <div class="qp-foot">
+        <div class="qp-fcontact">Prepared by <span id="pv-contact">—</span><br><span id="pv-cdetails"></span></div>
+        <div class="qp-fvalid" id="pv-fvalid"></div>
+      </div>
+      <div class="qp-payment" id="pv-payment">
+        <div class="qp-pmt-title">Payment Details</div>
+        <div class="qp-pmt-grid" id="pv-pmtgrid"></div>
+        <div class="qp-pmt-note" id="pv-pmtnote"></div>
+        <a class="qp-stripe" id="pv-stripe" href="#" target="_blank">💳 Pay Deposit Online</a>
+      </div>
+    </div>
+    <div class="prev-btns">
+      <button class="btn btn-g" onclick="doPrint()">🖨 PDF</button>
+      <button class="btn btn-g" onclick="openEmail()">✉ Email</button>
+      <button class="btn btn-g" onclick="shareQuote()">🔗 Share</button>
+      <button class="btn btn-p" onclick="saveQuote()">💾 Save</button>
+    </div>
+  </div>
+</div><!-- /view-quote -->
+
+<!-- ═══ HISTORY VIEW ═══ -->
+<div class="view" id="view-history">
+  <div class="hpanel">
+    <div class="panel-hdr">
+      <div class="panel-title">Quote History</div>
+      <button class="btn btn-p" onclick="showView('quote');newQuote()">+ New Quote</button>
+    </div>
+    <div class="panel-sub">All saved quotes. Update status as enquiries progress.</div>
+    <div id="hlist"></div>
+  </div>
+</div>
+
+<!-- ═══ PACKAGES VIEW ═══ -->
+<div class="view" id="view-packages">
+  <div class="abpanel">
+    <div class="panel-hdr" style="margin-bottom:6px;">
+      <div class="panel-title">Package Builder</div>
+    </div>
+    <div class="panel-sub">Set your real packages and pricing — flows directly into every quote.</div>
+    <div class="info-box"><strong>How it works:</strong> Add packages per event type. Set per-person price + minimum spend. Quote total = whichever is higher. Changes save instantly.</div>
+    <div class="et-tabs" id="ab-tabs"></div>
+    <div class="divider"><span>Packages</span></div>
+    <div class="bc-grid" id="ab-pkgs"></div>
+    <div class="divider"><span>Add-Ons (all event types)</span></div>
+    <div class="ao-builder" id="ab-addons"></div>
+    <div class="divider"><span>Spaces & Room Hire</span></div>
+    <div class="rh-grid" id="ab-spaces"></div>
+  </div>
+</div>
+
+<!-- ═══ BRANDING VIEW ═══ -->
+<div class="view" id="view-branding">
+  <div class="brpanel">
+    <div class="panel-title" style="margin-bottom:6px;">Venue Branding</div>
+    <div class="panel-sub">Customise your quotes. Changes apply instantly.</div>
+
+    <div class="divider"><span>Logo</span></div>
+    <div class="logo-zone" id="logo-zone" onclick="document.getElementById('logo-input').click()">
+      <input type="file" id="logo-input" accept="image/*" style="display:none" onchange="uploadLogo(event)">
+      <img class="logo-prev" id="logo-prev" src="" alt="">
+      <div id="logo-placeholder">
+        <div style="font-size:28px;margin-bottom:6px;">🖼️</div>
+        <div style="font-size:12px;color:var(--light);"><strong style="color:var(--mid);">Click to upload logo</strong><br>PNG, JPG, SVG</div>
+      </div>
+      <button id="logo-rm" style="display:none;margin-top:8px;font-size:11px;background:transparent;border:1px solid var(--border);border-radius:3px;padding:4px 10px;cursor:pointer;color:var(--mid);" onclick="removeLogo(event)">Remove</button>
+    </div>
+
+    <div class="divider"><span>Colour Scheme</span></div>
+    <div class="swatches" id="swatches"></div>
+    <div style="margin-bottom:18px;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--light);margin-bottom:10px;">Custom</div>
+      <div class="cpickers">
+        <div class="cpg"><label>Header</label><input type="color" id="cp-primary" value="#1a1814" oninput="applyCustomColor()"></div>
+        <div class="cpg"><label>Accent</label><input type="color" id="cp-accent" value="#b8965a" oninput="applyCustomColor()"></div>
+        <div class="cpg"><label>Accent Light</label><input type="color" id="cp-alight" value="#d4b07a" oninput="applyCustomColor()"></div>
+        <button class="btn btn-g btn-sm" onclick="applyScheme(0)">Reset</button>
+      </div>
+    </div>
+
+    <div class="divider"><span>Venue Details (pre-fills all quotes)</span></div>
+    <div class="fg2">
+      <div class="fgrp full"><label>Venue Name</label><input class="fi" id="br-vname" type="text"></div>
+      <div class="fgrp"><label>Contact</label><input class="fi" id="br-contact" type="text"></div>
+      <div class="fgrp"><label>Phone</label><input class="fi" id="br-phone" type="text"></div>
+      <div class="fgrp full"><label>Email</label><input class="fi" id="br-email" type="email"></div>
+      <div class="fgrp full"><label>Default Terms & Conditions</label><textarea class="fi" id="br-terms"></textarea></div>
+    </div>
+
+    <div class="divider"><span>Payment Details</span></div>
+    <div class="info-box">Set once — appears on every quote automatically.</div>
+    <div class="fg2">
+      <div class="fgrp"><label>Bank Name</label><input class="fi" id="br-bank" type="text" placeholder="e.g. Commonwealth Bank"></div>
+      <div class="fgrp"><label>Account Name</label><input class="fi" id="br-accname" type="text" placeholder="e.g. Public House Pty Ltd"></div>
+      <div class="fgrp"><label>BSB</label><input class="fi" id="br-bsb" type="text" placeholder="062-000"></div>
+      <div class="fgrp"><label>Account Number</label><input class="fi" id="br-accnum" type="text" placeholder="12345678"></div>
+      <div class="fgrp full"><label>PayID (optional)</label><input class="fi" id="br-payid" type="text" placeholder="events@venue.com.au or 0400 000 000"></div>
+      <div class="fgrp full"><label>Stripe Link (optional)</label><input class="fi" id="br-stripe" type="url" placeholder="https://buy.stripe.com/..."></div>
+      <div class="fgrp full"><label>Payment Instructions</label><textarea class="fi" id="br-pmtnote" placeholder="e.g. Use your quote number as payment reference. Deposit required within 48hrs."></textarea></div>
+    </div>
+    <div style="margin-top:20px;"><button class="btn btn-a" onclick="saveBranding()">Save Branding</button></div>
+  </div>
+</div>
+
+<!-- EMAIL MODAL -->
+<div class="overlay" id="email-overlay">
+  <div class="modal">
+    <div class="modal-title">Email Quote to Client</div>
+    <div class="fgrp" style="margin-bottom:12px;"><label>To</label><input class="fi" id="em-to" type="email"></div>
+    <div class="fgrp" style="margin-bottom:12px;"><label>Subject</label><input class="fi" id="em-subj" type="text"></div>
+    <div class="fgrp"><label>Preview</label></div>
+    <div class="eprev" id="em-body"></div>
+    <div class="modal-btns">
+      <button class="btn btn-g" onclick="closeOverlay()">Cancel</button>
+      <button class="btn btn-g" onclick="copyEmail()">📋 Copy</button>
+      <button class="btn btn-a" onclick="sendEmail()">✉ Open Mail</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════
+// DATA
+// ══════════════════════════
+const LS = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ localStorage.setItem(k,JSON.stringify(v)); }
+};
+
+const DEFAULT_PKGS = {
+  function:[
+    {id:'f1',name:'Beverage Package',pp:55,min:1200,incl:'3hr standard drinks, soft drinks, tea & coffee'},
+    {id:'f2',name:'Premium Beverage',pp:75,min:1800,incl:'4hr premium drinks, cocktail on arrival'},
+    {id:'f3',name:'Beverage + Canapés',pp:95,min:2500,incl:'3hr drinks, 5 canapés pp, grazing board'},
+    {id:'f4',name:'Full Event Package',pp:145,min:4000,incl:'4hr premium drinks, 3-course menu, room hire'},
+  ],
+  wedding:[
+    {id:'w1',name:'Cocktail Reception',pp:95,min:3000,incl:'3hr drinks, canapés, cake cutting'},
+    {id:'w2',name:'Sit-Down Reception',pp:175,min:8000,incl:'5hr premium drinks, 3-course dinner'},
+    {id:'w3',name:'Full Wedding Package',pp:225,min:12000,incl:'Full day, ceremony, 5hr drinks, florals'},
+  ],
+  corporate:[
+    {id:'c1',name:'Day Delegate',pp:65,min:1500,incl:'Room hire, AV, morning tea, lunch, afternoon tea'},
+    {id:'c2',name:'Evening Function',pp:85,min:2000,incl:'4hr drinks, canapés, room setup'},
+    {id:'c3',name:'Product Launch',pp:115,min:4500,incl:'Premium drinks, canapés, AV & staging'},
+  ],
+  cocktail:[
+    {id:'ck1',name:'2hr Cocktail',pp:55,min:1000,incl:'2hr standard drinks, 3 canapés pp'},
+    {id:'ck2',name:'3hr Premium',pp:75,min:1500,incl:'3hr premium drinks, 5 canapés pp'},
+    {id:'ck3',name:'Full Service',pp:125,min:3500,incl:'4hr drinks, canapés, 2 substantial stations'},
+  ],
+  'sit-down':[
+    {id:'sd1',name:'2-Course Menu',pp:85,min:2000,incl:'Entrée + main, 3hr house beverages'},
+    {id:'sd2',name:'3-Course Menu',pp:115,min:3000,incl:'Entrée, main + dessert, 3.5hr premium drinks'},
+    {id:'sd3',name:'Long Table Feast',pp:135,min:4000,incl:'Share menu, 4hr premium drinks, centrepiece'},
+  ],
+  other:[
+    {id:'o1',name:'Beverage Only',pp:55,min:800,incl:'3hr standard drinks, soft drinks'},
+    {id:'o2',name:'Full Service',pp:125,min:2500,incl:'4hr drinks, canapés, room hire, staff'},
+  ]
+};
+const DEFAULT_ADDONS = [
+  {id:'a1',name:'DJ / Music',price:800},{id:'a2',name:'Photo Booth',price:600},
+  {id:'a3',name:'Floral Centrepieces',price:450},{id:'a4',name:'AV & Projector',price:350},
+  {id:'a5',name:'Cake & Cutting',price:150},{id:'a6',name:'Security Staff',price:480},
+  {id:'a7',name:'Valet Parking',price:650},{id:'a8',name:'Branded Photo Wall',price:900},
+];
+const DEFAULT_SPACES = [
+  {id:'s1',name:'Rooftop — Full Venue',hire:0},{id:'s2',name:'Rooftop — East Section',hire:0},
+  {id:'s3',name:'Ground Floor — Full Venue',hire:0},{id:'s4',name:'Private Dining Room',hire:250},
+  {id:'s5',name:'Full Venue Exclusive',hire:800},
+];
+const ET = [
+  {id:'function',label:'Private Function',icon:'🥂',sub:'Birthday, anniversary, farewell'},
+  {id:'wedding',label:'Wedding',icon:'💍',sub:'Reception, rehearsal dinner'},
+  {id:'corporate',label:'Corporate',icon:'💼',sub:'Conference, launch, team event'},
+  {id:'cocktail',label:'Cocktail Party',icon:'🍸',sub:'Standing, canapés, drinks'},
+  {id:'sit-down',label:'Sit-Down Dinner',icon:'🍽️',sub:'Set menu, long table'},
+  {id:'other',label:'Other',icon:'✨',sub:'Custom event type'},
+];
+const SCHEMES = [
+  {name:'Gold & Charcoal',P:'#1a1814',A:'#b8965a',AL:'#d4b07a'},
+  {name:'Navy & Gold',P:'#1a2744',A:'#c9a84c',AL:'#e0c070'},
+  {name:'Forest & Copper',P:'#1f2e1f',A:'#b5622a',AL:'#d4834a'},
+  {name:'Slate & Rose',P:'#2c2c3a',A:'#c47a8a',AL:'#e0a0ae'},
+  {name:'Onyx & Silver',P:'#0f0f0f',A:'#8a8a9a',AL:'#b4b4c4'},
+  {name:'Burgundy',P:'#3d1a1a',A:'#a85858',AL:'#c87878'},
+  {name:'Teal & Sand',P:'#1a3030',A:'#5a9090',AL:'#7ab0b0'},
+  {name:'Custom',P:'#1a1814',A:'#b8965a',AL:'#d4b07a'},
+];
+
+// ══════════════════════════
+// STATE
+// ══════════════════════════
+let pkgs    = LS.get('vq_pkgs', JSON.parse(JSON.stringify(DEFAULT_PKGS)));
+let addons  = LS.get('vq_addons', JSON.parse(JSON.stringify(DEFAULT_ADDONS)));
+let spaces  = LS.get('vq_spaces', JSON.parse(JSON.stringify(DEFAULT_SPACES)));
+let history = LS.get('vq_history', []);
+let branding= LS.get('vq_branding', null);
+
+let S = {
+  step: 0,
+  etype: '',
+  pkg: null,
+  aos: [],
+  qnum: makeQNum(),
+  logo: null,
+  brand: { P:'#1a1814', A:'#b8965a', AL:'#d4b07a' },
+  abtype: 'function',
+};
+
+function makeQNum() {
+  return 'Q-'+new Date().getFullYear()+'-'+String(LS.get('vq_history',[]).length+1).padStart(3,'0');
+}
+
+// ══════════════════════════
+// VIEW SWITCHING
+// ══════════════════════════
+function showView(v) {
+  // hide all views
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(el => el.classList.remove('on'));
+  // show target
+  document.getElementById('view-'+v).classList.add('on');
+  document.getElementById('ntab-'+v).classList.add('on');
+  // dots only on quote view
+  document.getElementById('stepdots').style.display = v==='quote' ? 'flex' : 'none';
+  // render panels
+  if (v==='history') renderHistory();
+  if (v==='packages') renderPackages();
+}
+
+// ══════════════════════════
+// STEPS
+// ══════════════════════════
+function goNext() {
+  // validate
+  if (S.step===0) {
+    const vn = document.getElementById('f-vname').value.trim();
+    const cn = document.getElementById('f-cname').value.trim();
+    const errs = [];
+    if (!vn) { document.getElementById('f-vname').classList.add('err'); errs.push('Venue Name is required'); }
+    if (!cn) { document.getElementById('f-cname').classList.add('err'); errs.push('Client Name is required'); }
+    if (errs.length) { showErr(0, errs); return; }
+  }
+  if (S.step===1) {
+    const ed = document.getElementById('f-date').value;
+    const gc = document.getElementById('f-guests').value;
+    const errs = [];
+    if (!S.etype) errs.push('Please select an event type');
+    if (!ed) { document.getElementById('f-date').classList.add('err'); errs.push('Event Date is required'); }
+    if (!gc||parseInt(gc)<1) { document.getElementById('f-guests').classList.add('err'); errs.push('Guest Count is required'); }
+    if (errs.length) { showErr(1, errs); return; }
+  }
+  if (S.step===2) {
+    if (!S.pkg) { showErr(2, ['Please select a package']); return; }
+  }
+  // advance
+  if (S.step < 3) {
+    S.step++;
+    showStep();
+    if (S.step===1) renderEventTypes();
+    if (S.step===2) renderPkgCards();
+  }
+}
+
+function goPrev() {
+  if (S.step > 0) { S.step--; showStep(); }
+}
+
+function showStep() {
+  for (let i=0;i<4;i++) {
+    document.getElementById('vstep-'+i).classList.toggle('on', i===S.step);
+    const d = document.getElementById('dot-'+i);
+    if (d) { d.classList.toggle('on',i===S.step); d.classList.toggle('done',i<S.step); }
+  }
+  updatePreview();
+}
+
+function showErr(step, msgs) {
+  const el = document.getElementById('err-'+step);
+  if (!el) return;
+  el.innerHTML = msgs.map(m=>'⚠ '+m).join('<br>');
+  el.classList.add('on');
+}
+
+// clear errors on input
+document.addEventListener('input', e => {
+  if (e.target.classList.contains('fi')) {
+    e.target.classList.remove('err');
+    const s = S.step;
+    const errEl = document.getElementById('err-'+s);
+    if (errEl) errEl.classList.remove('on');
+  }
+});
+
+// ══════════════════════════
+// EVENT TYPES
+// ══════════════════════════
+function renderEventTypes() {
+  document.getElementById('et-grid').innerHTML = ET.map(e=>`
+    <div class="et-card ${S.etype===e.id?'on':''}" onclick="pickET('${e.id}',this)">
+      <div class="et-icon">${e.icon}</div>
+      <div class="et-name">${e.label}</div>
+      <div class="et-sub">${e.sub}</div>
+    </div>`).join('');
+  // spaces
+  const sp = document.getElementById('f-space');
+  sp.innerHTML = '<option value="">Select area...</option>' +
+    spaces.map(s=>`<option value="${s.name}">${s.name}${s.hire>0?' (+$'+s.hire+')':''}</option>`).join('');
+}
+
+function pickET(id, el) {
+  S.etype = id; S.pkg = null; S.aos = [];
+  document.querySelectorAll('.et-card').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  // clear event type error
+  const errEl = document.getElementById('err-1');
+  if (errEl) errEl.classList.remove('on');
+  updatePreview();
+}
+
+// ══════════════════════════
+// PACKAGES
+// ══════════════════════════
+function renderPkgCards() {
+  const type = S.etype||'function';
+  const list = pkgs[type]||[];
+  const g = parseInt(document.getElementById('f-guests').value)||50;
+
+  if (!list.length) {
+    document.getElementById('pkg-grid').innerHTML = `<div class="pkg-empty">No packages for this event type. <a onclick="showView('packages')">Add in Package Builder →</a></div>`;
+  } else {
+    document.getElementById('pkg-grid').innerHTML = list.map(p=>{
+      const est = p.pp>0 ? Math.max(p.pp*g, p.min) : p.min;
+      return `<div class="pkg-card ${S.pkg&&S.pkg.id===p.id?'on':''}" onclick="pickPkg('${p.id}',this)">
+        <div class="pkg-name">${p.name}</div>
+        <div class="pkg-price">${p.pp>0?'$'+p.pp+'<span>/person</span>':p.min>0?'Min $'+p.min.toLocaleString():'Custom'}</div>
+        <div class="pkg-incl">${p.incl}</div>
+        ${est>0?`<div class="pkg-est">Est. $${est.toLocaleString()}</div>`:''}
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('ao-grid').innerHTML = addons.length ? addons.map(a=>`
+    <div class="ao-item ${S.aos.includes(a.id)?'on':''}" onclick="toggleAO('${a.id}',this)">
+      <div class="ao-chk">${S.aos.includes(a.id)?'✓':''}</div>
+      <div><div class="ao-name">${a.name}</div><div class="ao-price">+$${a.price.toLocaleString()}</div></div>
+    </div>`).join('') : '<div style="font-size:12px;color:var(--light);">No add-ons set up yet.</div>';
+}
+
+function pickPkg(id, el) {
+  const type = S.etype||'function';
+  S.pkg = (pkgs[type]||[]).find(p=>p.id===id)||null;
+  document.querySelectorAll('.pkg-card').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  const errEl = document.getElementById('err-2');
+  if (errEl) errEl.classList.remove('on');
+  updatePreview();
+}
+
+function toggleAO(id, el) {
+  const i = S.aos.indexOf(id);
+  if (i>-1) S.aos.splice(i,1); else S.aos.push(id);
+  el.classList.toggle('on');
+  el.querySelector('.ao-chk').textContent = S.aos.includes(id)?'✓':'';
+  updatePreview();
+}
+
+// ══════════════════════════
+// TOTALS
+// ══════════════════════════
+function calcSub() {
+  const g = parseInt(document.getElementById('f-guests').value)||0;
+  let t = 0;
+  if (S.pkg) t = S.pkg.pp>0 ? Math.max(S.pkg.pp*g, S.pkg.min) : S.pkg.min;
+  const sname = document.getElementById('f-space')?.value;
+  const sp = spaces.find(s=>s.name===sname);
+  if (sp && sp.hire>0) t += sp.hire;
+  S.aos.forEach(id=>{ const a=addons.find(x=>x.id===id); if(a) t+=a.price; });
+  return t;
+}
+function calcTotal() {
+  const sub = calcSub();
+  return document.getElementById('f-gst')?.checked ? sub*1.1 : sub;
+}
+
+// ══════════════════════════
+// PREVIEW
+// ══════════════════════════
+function updatePreview() {
+  const vn   = document.getElementById('f-vname').value||'Your Venue';
+  const vc   = document.getElementById('f-vcontact').value;
+  const vph  = document.getElementById('f-vphone').value;
+  const vem  = document.getElementById('f-vemail').value;
+  const cn   = document.getElementById('f-cname').value||'—';
+  const ed   = document.getElementById('f-date').value;
+  const st   = document.getElementById('f-start').value;
+  const et   = document.getElementById('f-end').value;
+  const g    = document.getElementById('f-guests').value;
+  const sp   = document.getElementById('f-space').value;
+  const val  = document.getElementById('f-valid')?.value;
+  const dep  = document.getElementById('f-deposit')?.value;
+  const gst  = document.getElementById('f-gst')?.checked;
+
+  if (ed) document.getElementById('f-day').value = new Date(ed).toLocaleDateString('en-AU',{weekday:'long'});
+
+  $('pv-vname').textContent = vn;
+  $('pv-qnum').textContent = S.qnum;
+  $('pv-today').textContent = new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+  $('pv-client').textContent = cn;
+  $('pv-date').textContent = ed ? new Date(ed).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}) : '—';
+  $('pv-time').textContent = st&&et ? st+' – '+et : '—';
+  $('pv-guests').textContent = g ? g+' guests' : '—';
+  $('pv-space').textContent = sp||'—';
+  $('pv-contact').textContent = vc||'—';
+  $('pv-cdetails').textContent = [vph,vem].filter(Boolean).join(' · ');
+
+  if (st&&et) {
+    const sm=toMin(st), em2=toMin(et)+(toMin(et)<=toMin(st)?1440:0);
+    const m=em2-sm;
+    $('pv-dur').textContent = Math.floor(m/60)+'h'+(m%60?' '+(m%60)+'m':'');
+  }
+  if (val) {
+    const vd=new Date(val).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+    $('pv-validlbl').textContent='Valid '+vd;
+    $('pv-fvalid').textContent='Valid until '+vd;
+  } else { $('pv-validlbl').textContent=''; $('pv-fvalid').textContent=''; }
+
+  const etmap={function:'Private Function',wedding:'Wedding',corporate:'Corporate Event',cocktail:'Cocktail Party','sit-down':'Sit-Down Dinner',other:'Special Event'};
+  $('pv-etitle').textContent = etmap[S.etype]||'Event Proposal';
+  $('pv-esub').textContent = [cn!=='—'?cn:null, ed?new Date(ed).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):null, g?g+' guests':null].filter(Boolean).join(' · ')||'Fill in details above';
+
+  // Line items
+  const gn=parseInt(g)||0;
+  let lines='';
+  if (S.pkg) {
+    const p=S.pkg;
+    const pc=p.pp>0?Math.max(p.pp*gn,p.min):p.min;
+    lines+=`<div class="qp-line"><span class="qp-ln">${p.name}${p.pp>0&&gn?' ('+gn+' × $'+p.pp+')':''}</span><span class="qp-lp">${pc>0?'$'+pc.toLocaleString():'TBD'}</span></div>`;
+  }
+  const spObj=spaces.find(s=>s.name===sp);
+  if (spObj&&spObj.hire>0) lines+=`<div class="qp-line"><span class="qp-ln">Room Hire</span><span class="qp-lp">$${spObj.hire.toLocaleString()}</span></div>`;
+  S.aos.forEach(id=>{ const a=addons.find(x=>x.id===id); if(a) lines+=`<div class="qp-line"><span class="qp-ln">${a.name}</span><span class="qp-lp">$${a.price.toLocaleString()}</span></div>`; });
+  if (dep&&parseInt(dep)>0) lines+=`<div class="qp-line" style="border-top:2px solid var(--border);margin-top:4px;padding-top:8px;"><span class="qp-ln" style="color:var(--A);">Deposit Required</span><span class="qp-lp" style="color:var(--A);">$${parseInt(dep).toLocaleString()}</span></div>`;
+  $('pv-lines').innerHTML = lines||'<div class="qp-line"><span class="qp-ln" style="color:var(--border);font-style:italic;">Select a package to see pricing</span></div>';
+
+  // Total + GST
+  const sub=calcSub(), total=calcTotal(), gstAmt=sub*0.1;
+  $('pv-total').textContent = '$'+total.toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if (gst&&sub>0) {
+    $('pv-gstline').textContent = 'Ex GST $'+sub.toLocaleString('en-AU',{minimumFractionDigits:2})+' + GST $'+gstAmt.toLocaleString('en-AU',{minimumFractionDigits:2});
+    $('pv-total').textContent += ' inc. GST';
+    // update gst note
+    const gnote=$('gst-note'); if(gnote) gnote.textContent='GST: $'+gstAmt.toLocaleString('en-AU',{minimumFractionDigits:2});
+  } else {
+    $('pv-gstline').textContent='';
+    const gnote=$('gst-note'); if(gnote) gnote.textContent='';
+  }
+
+  // Payment section
+  renderPaymentPreview();
+}
+
+function renderPaymentPreview() {
+  const bd = branding||{};
+  const has = bd.bsb||bd.accnum||bd.payid||bd.stripe||bd.pmtnote;
+  const pmtEl = $('pv-payment');
+  if (!has) { pmtEl.style.display='none'; return; }
+  pmtEl.style.display='block';
+
+  let g='';
+  if(bd.bank) g+=item('Bank',bd.bank);
+  if(bd.accname) g+=item('Account',bd.accname);
+  if(bd.bsb) g+=item('BSB',bd.bsb);
+  if(bd.accnum) g+=item('Acc No.',bd.accnum);
+  if(bd.payid) g+=`<div class="qp-pmt-item" style="grid-column:1/-1;">${item('PayID',bd.payid)}</div>`;
+  if(S.qnum) g+=`<div class="qp-pmt-item" style="grid-column:1/-1;">${item('Reference',S.qnum)}</div>`;
+  $('pv-pmtgrid').innerHTML=g;
+  $('pv-pmtnote').textContent=bd.pmtnote||'';
+  $('pv-pmtnote').style.display=bd.pmtnote?'block':'none';
+  const stripeEl=$('pv-stripe');
+  if(bd.stripe){ stripeEl.href=bd.stripe; stripeEl.style.display='block'; } else stripeEl.style.display='none';
+}
+
+function item(k,v){ return `<div class="qp-pmt-item"><label>${k}</label><span>${v}</span></div>`; }
+function toMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+function $(id){ return document.getElementById(id); }
+
+// ══════════════════════════
+// SAVE & HISTORY
+// ══════════════════════════
+function saveQuote() {
+  const etmap={function:'Private Function',wedding:'Wedding',corporate:'Corporate Event',cocktail:'Cocktail Party','sit-down':'Sit-Down Dinner',other:'Special Event'};
+  const q = {
+    id:S.qnum, client:$('f-cname').value||'Unknown',
+    venue:$('f-vname').value, eventDate:$('f-date').value,
+    guests:$('f-guests').value, etype:S.etype,
+    etlabel:etmap[S.etype]||'Event', pkg:S.pkg?.name||null,
+    total:calcTotal(), savedAt:new Date().toISOString(),
+    status:(history.find(x=>x.id===S.qnum)||{}).status||'draft',
+  };
+  const idx=history.findIndex(x=>x.id===S.qnum);
+  if(idx>-1) history[idx]=q; else history.unshift(q);
+  LS.set('vq_history',history);
+  $('hbadge').textContent=history.length;
+  toast('Quote '+S.qnum+' saved ✓');
+}
+
+function renderHistory() {
+  const el=$('hlist');
+  if(!history.length){ el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><p>No quotes saved yet.</p></div>'; return; }
+  el.innerHTML=history.map(q=>`
+    <div class="qcard">
+      <div class="qc-id">${q.id}</div>
+      <div class="qc-client">${q.client}<div class="qc-venue">${q.venue||''}</div></div>
+      <div class="qc-meta">${q.eventDate?new Date(q.eventDate).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):'Date TBD'}<br>${q.guests?q.guests+' guests':''}</div>
+      <div class="qc-type">${q.etlabel||''}</div>
+      <div class="qc-total">${q.total>0?'$'+q.total.toLocaleString():'TBD'}</div>
+      <span class="qc-status ${q.status}">${q.status}</span>
+      <select class="qc-sel" onchange="setStatus('${q.id}',this.value)">
+        <option ${q.status==='draft'?'selected':''}>draft</option>
+        <option ${q.status==='sent'?'selected':''}>sent</option>
+        <option ${q.status==='accepted'?'selected':''}>accepted</option>
+      </select>
+      <button class="qc-btn" onclick="dupQuote('${q.id}')">Duplicate</button>
+      <button class="qc-btn del" onclick="delQuote('${q.id}')">Delete</button>
+    </div>`).join('');
+}
+
+function setStatus(id,s){ const q=history.find(x=>x.id===id); if(q){q.status=s;LS.set('vq_history',history);renderHistory();} }
+function delQuote(id){ if(!confirm('Delete '+id+'?'))return; history=history.filter(q=>q.id!==id); LS.set('vq_history',history); $('hbadge').textContent=history.length; renderHistory(); toast('Deleted'); }
+function dupQuote(id){
+  const o=history.find(q=>q.id===id); if(!o)return;
+  const nid='Q-'+new Date().getFullYear()+'-'+String(history.length+1).padStart(3,'0');
+  history.unshift(Object.assign({},o,{id:nid,status:'draft',client:o.client+' (Copy)',savedAt:new Date().toISOString()}));
+  LS.set('vq_history',history); $('hbadge').textContent=history.length; renderHistory(); toast('Duplicated → '+nid);
+}
+
+function newQuote() {
+  S.step=0; S.etype=''; S.pkg=null; S.aos=[]; S.qnum=makeQNum();
+  ['f-vname','f-vcontact','f-vphone','f-vemail','f-cname','f-cphone','f-cemail',
+   'f-date','f-day','f-guests','f-notes','f-deposit','f-valid','f-terms'].forEach(id=>{ const el=$(id); if(el)el.value=''; });
+  $('f-start').value='18:00'; $('f-end').value='23:00';
+  $('f-valid').value=new Date(Date.now()+14*86400000).toISOString().split('T')[0];
+  if($('f-gst')) $('f-gst').checked=false;
+  // pre-fill from branding
+  if(branding){
+    if(branding.vname) $('f-vname').value=branding.vname;
+    if(branding.contact) $('f-vcontact').value=branding.contact;
+    if(branding.phone) $('f-vphone').value=branding.phone;
+    if(branding.email) $('f-vemail').value=branding.email;
+    if(branding.terms) $('f-terms').value=branding.terms;
+  }
+  showStep();
+  updatePreview();
+}
+
+// ══════════════════════════
+// PACKAGE BUILDER
+// ══════════════════════════
+function renderPackages() {
+  // tabs
+  $('ab-tabs').innerHTML=ET.map(e=>`<div class="et-tab ${S.abtype===e.id?'on':''}" onclick="abSwitch('${e.id}')">${e.icon} ${e.label}</div>`).join('');
+  // pkg cards
+  const list=pkgs[S.abtype]||[];
+  $('ab-pkgs').innerHTML=list.map(p=>`
+    <div class="bcard">
+      <div class="bcard-hdr"><div class="bcard-title">${p.name}</div><button class="btn-del" onclick="delPkg('${p.id}')">Delete</button></div>
+      <div class="bcard-body">
+        <div class="bcf"><label>Package Name</label><input class="bci" value="${p.name}" oninput="updPkg('${p.id}','name',this.value)"></div>
+        <div class="bci-row">
+          <div class="bcf"><label>Price/Person ($)</label><input class="bci" type="number" value="${p.pp}" oninput="updPkg('${p.id}','pp',parseFloat(this.value)||0)"></div>
+          <div class="bcf"><label>Min Spend ($)</label><input class="bci" type="number" value="${p.min}" oninput="updPkg('${p.id}','min',parseFloat(this.value)||0)"></div>
+        </div>
+        <div class="bcf"><label>Includes</label><textarea class="bci bci-ta" oninput="updPkg('${p.id}','incl',this.value)">${p.incl}</textarea></div>
+        <div class="bc-hint">Total = max(price × guests, min spend)</div>
+      </div>
+    </div>`).join('')+`<div class="bc-add" onclick="addPkg()"><div class="bc-add-icon">+</div><div class="bc-add-lbl">Add Package</div></div>`;
+  // addons
+  $('ab-addons').innerHTML=addons.map(a=>`
+    <div class="aob-card">
+      <div class="aob-hdr"><div class="aob-name">${a.name}</div><button class="btn-del" onclick="delAddon('${a.id}')">×</button></div>
+      <div class="bcf"><label>Name</label><input class="bci" value="${a.name}" oninput="updAddon('${a.id}','name',this.value)"></div>
+      <div class="bcf"><label>Price ($)</label><input class="bci" type="number" value="${a.price}" oninput="updAddon('${a.id}','price',parseFloat(this.value)||0)"></div>
+    </div>`).join('')+`<div class="aob-card" style="border:2px dashed var(--border);align-items:center;justify-content:center;cursor:pointer;min-height:110px;" onclick="addAddon()"><div style="text-align:center;color:var(--light);"><div style="font-size:22px;">+</div><div style="font-size:11px;margin-top:3px;">Add</div></div></div>`;
+  // spaces
+  $('ab-spaces').innerHTML=spaces.map(s=>`
+    <div class="rh-card">
+      <div class="bcf" style="margin-bottom:8px;"><label>Space Name</label><input class="bci" value="${s.name}" oninput="updSpace('${s.id}','name',this.value)"></div>
+      <div class="bcf" style="margin-bottom:8px;"><label>Room Hire ($, 0 = included)</label><input class="bci" type="number" value="${s.hire}" oninput="updSpace('${s.id}','hire',parseFloat(this.value)||0)"></div>
+      <button class="btn-del" onclick="delSpace('${s.id}')">Remove</button>
+    </div>`).join('')+`<div class="rh-card" style="border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:120px;" onclick="addSpace()"><div style="text-align:center;color:var(--light);"><div style="font-size:22px;">+</div><div style="font-size:11px;margin-top:3px;">Add Space</div></div></div>`;
+}
+
+function abSwitch(t){ S.abtype=t; renderPackages(); }
+function addPkg(){ const t=S.abtype; if(!pkgs[t])pkgs[t]=[]; pkgs[t].push({id:'p'+Date.now(),name:'New Package',pp:0,min:0,incl:''}); LS.set('vq_pkgs',pkgs); renderPackages(); toast('Package added'); }
+function updPkg(id,f,v){ const t=S.abtype; const p=(pkgs[t]||[]).find(x=>x.id===id); if(p){p[f]=v;LS.set('vq_pkgs',pkgs);} }
+function delPkg(id){ const t=S.abtype; pkgs[t]=(pkgs[t]||[]).filter(p=>p.id!==id); LS.set('vq_pkgs',pkgs); renderPackages(); toast('Removed'); }
+function addAddon(){ addons.push({id:'a'+Date.now(),name:'New Add-On',price:0}); LS.set('vq_addons',addons); renderPackages(); toast('Add-on added'); }
+function updAddon(id,f,v){ const a=addons.find(x=>x.id===id); if(a){a[f]=v;LS.set('vq_addons',addons);} }
+function delAddon(id){ addons=addons.filter(a=>a.id!==id); LS.set('vq_addons',addons); renderPackages(); toast('Removed'); }
+function addSpace(){ spaces.push({id:'s'+Date.now(),name:'New Space',hire:0}); LS.set('vq_spaces',spaces); renderPackages(); toast('Space added'); }
+function updSpace(id,f,v){ const s=spaces.find(x=>x.id===id); if(s){s[f]=v;LS.set('vq_spaces',spaces);} }
+function delSpace(id){ spaces=spaces.filter(s=>s.id!==id); LS.set('vq_spaces',spaces); renderPackages(); toast('Removed'); }
+
+// ══════════════════════════
+// BRANDING
+// ══════════════════════════
+function renderSwatches() {
+  $('swatches').innerHTML=SCHEMES.map((s,i)=>`
+    <div class="swatch" id="sw-${i}" onclick="applyScheme(${i})">
+      <div class="swatch-bar" style="background:linear-gradient(135deg,${s.P} 50%,${s.A} 50%)"></div>
+      <div class="swatch-name">${s.name}</div>
+    </div>`).join('');
+}
+
+function applyScheme(i) {
+  if(i===7)return;
+  const s=SCHEMES[i];
+  S.brand={P:s.P,A:s.A,AL:s.AL};
+  $('cp-primary').value=s.P; $('cp-accent').value=s.A; $('cp-alight').value=s.AL;
+  document.querySelectorAll('.swatch').forEach((el,j)=>el.classList.toggle('on',i===j));
+  applyBrandColors();
+}
+
+function applyCustomColor() {
+  S.brand.P=$('cp-primary').value; S.brand.A=$('cp-accent').value; S.brand.AL=$('cp-alight').value;
+  document.querySelectorAll('.swatch').forEach(el=>el.classList.remove('on'));
+  $('sw-7').classList.add('on');
+  applyBrandColors();
+}
+
+function applyBrandColors() {
+  const r=document.documentElement;
+  r.style.setProperty('--P',S.brand.P);
+  r.style.setProperty('--A',S.brand.A);
+  r.style.setProperty('--AL',S.brand.AL);
+}
+
+function uploadLogo(e) {
+  const f=e.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    S.logo=ev.target.result;
+    $('logo-prev').src=ev.target.result; $('logo-prev').style.display='block';
+    $('logo-placeholder').style.display='none'; $('logo-rm').style.display='inline-block';
+    $('logo-zone').classList.add('has');
+    $('pv-logoimg').src=ev.target.result; $('pv-logoimg').style.display='block';
+    $('pv-logotext').style.display='none';
+    toast('Logo uploaded ✓');
+  };
+  r.readAsDataURL(f);
+}
+
+function removeLogo(e) {
+  e.stopPropagation(); S.logo=null;
+  $('logo-prev').style.display='none'; $('logo-placeholder').style.display='block';
+  $('logo-rm').style.display='none'; $('logo-zone').classList.remove('has');
+  $('pv-logoimg').style.display='none'; $('pv-logotext').style.display='block';
+  $('logo-input').value='';
+}
+
+function saveBranding() {
+  branding={
+    brand:S.brand, logo:S.logo,
+    vname:$('br-vname').value, contact:$('br-contact').value,
+    phone:$('br-phone').value, email:$('br-email').value, terms:$('br-terms').value,
+    bank:$('br-bank').value, accname:$('br-accname').value,
+    bsb:$('br-bsb').value, accnum:$('br-accnum').value,
+    payid:$('br-payid').value, stripe:$('br-stripe').value, pmtnote:$('br-pmtnote').value,
+  };
+  LS.set('vq_branding',branding);
+  // pre-fill quote fields
+  if(branding.vname) $('f-vname').value=branding.vname;
+  if(branding.contact) $('f-vcontact').value=branding.contact;
+  if(branding.phone) $('f-vphone').value=branding.phone;
+  if(branding.email) $('f-vemail').value=branding.email;
+  if(branding.terms) $('f-terms').value=branding.terms;
+  updatePreview();
+  toast('Branding saved ✓');
+}
+
+function loadBranding() {
+  if(!branding)return;
+  S.brand=branding.brand||S.brand;
+  $('cp-primary').value=S.brand.P; $('cp-accent').value=S.brand.A; $('cp-alight').value=S.brand.AL;
+  applyBrandColors();
+  if(branding.logo){
+    S.logo=branding.logo;
+    $('logo-prev').src=branding.logo; $('logo-prev').style.display='block';
+    $('logo-placeholder').style.display='none'; $('logo-rm').style.display='inline-block';
+    $('logo-zone').classList.add('has');
+    $('pv-logoimg').src=branding.logo; $('pv-logoimg').style.display='block';
+    $('pv-logotext').style.display='none';
+  }
+  const fields=[['vname','br-vname'],['contact','br-contact'],['phone','br-phone'],['email','br-email'],['terms','br-terms'],
+    ['bank','br-bank'],['accname','br-accname'],['bsb','br-bsb'],['accnum','br-accnum'],
+    ['payid','br-payid'],['stripe','br-stripe'],['pmtnote','br-pmtnote']];
+  fields.forEach(([k,id])=>{ if(branding[k]&&$(id)) $(id).value=branding[k]; });
+  // pre-fill quote
+  if(branding.vname) $('f-vname').value=branding.vname;
+  if(branding.contact) $('f-vcontact').value=branding.contact;
+  if(branding.phone) $('f-vphone').value=branding.phone;
+  if(branding.email) $('f-vemail').value=branding.email;
+  if(branding.terms) $('f-terms').value=branding.terms;
+}
+
+// ══════════════════════════
+// EMAIL
+// ══════════════════════════
+function openEmail() {
+  const cn=$('f-cname').value||'there';
+  const vn=$('f-vname').value||'our venue';
+  const vc=$('f-vcontact').value||'The Events Team';
+  const ed=$('f-date').value;
+  const etmap={function:'Private Function',wedding:'Wedding',corporate:'Corporate Event',cocktail:'Cocktail Party','sit-down':'Sit-Down Dinner',other:'Special Event'};
+  const etlbl=etmap[S.etype]||'Event';
+  const total=calcTotal();
+  const val=$('f-valid').value;
+  const bd=branding||{};
+
+  $('em-to').value=$('f-cemail').value;
+  $('em-subj').value=S.qnum+' — '+etlbl+' Quote | '+vn;
+
+  let pmtBlock='';
+  if(bd.bsb||bd.accnum||bd.payid){
+    pmtBlock+='\n— PAYMENT DETAILS —\n';
+    if(bd.bank) pmtBlock+='Bank: '+bd.bank+'\n';
+    if(bd.accname) pmtBlock+='Account Name: '+bd.accname+'\n';
+    if(bd.bsb) pmtBlock+='BSB: '+bd.bsb+'\n';
+    if(bd.accnum) pmtBlock+='Account: '+bd.accnum+'\n';
+    if(bd.payid) pmtBlock+='PayID: '+bd.payid+'\n';
+    pmtBlock+='Reference: '+S.qnum+'\n';
+  }
+  if(bd.stripe) pmtBlock+='\nPay online: '+bd.stripe+'\n';
+  if(bd.pmtnote) pmtBlock+='\n'+bd.pmtnote+'\n';
+
+  const body=`Hi ${cn},
+
+Thank you for your enquiry — we'd love to host your event at ${vn}.
+
+Quote: ${S.qnum}
+Event: ${etlbl}
+${ed?'Date: '+new Date(ed).toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):''}
+${$('f-guests').value?'Guests: '+$('f-guests').value:''}
+${S.pkg?'Package: '+S.pkg.name:''}
+${total>0?'Total: $'+total.toLocaleString('en-AU',{minimumFractionDigits:2}):''}
+${val?'Valid until: '+new Date(val).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):''}
+${$('f-notes').value?'\nNotes: '+$('f-notes').value:''}
+${pmtBlock}
+To confirm your booking, please reply to this email or call us.
+
+${$('f-terms').value?$('f-terms').value+'\n\n':''}Warm regards,
+${vc}
+${vn}
+${[vph=$('f-vphone').value,vem=$('f-vemail').value].filter(Boolean).join(' | ')}`;
+
+  $('em-body').textContent=body;
+  $('email-overlay').classList.add('on');
+}
+
+function sendEmail() {
+  const to=$('em-to').value;
+  const subj=encodeURIComponent($('em-subj').value);
+  const body=encodeURIComponent($('em-body').textContent);
+  window.location.href=`mailto:${to}?subject=${subj}&body=${body}`;
+  closeOverlay();
+  const q=history.find(x=>x.id===S.qnum);
+  if(q){q.status='sent';LS.set('vq_history',history);}
+  toast('Opening mail app...');
+}
+
+function copyEmail() {
+  navigator.clipboard.writeText($('em-body').textContent).then(()=>toast('Copied ✓'));
+}
+
+function closeOverlay() { $('email-overlay').classList.remove('on'); }
+
+// ══════════════════════════
+// PDF & TOAST
+// ══════════════════════════
+function doPrint() { saveQuote(); toast('Opening print dialog...'); setTimeout(()=>window.print(),400); }
+
+function toast(msg) {
+  const t=$('toast'); t.textContent=msg; t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+// ══════════════════════════
+// INIT
+// ══════════════════════════
+function init() {
+  renderSwatches();
+  loadBranding();
+  $('f-valid').value=new Date(Date.now()+14*86400000).toISOString().split('T')[0];
+  $('f-start').value='18:00';
+  $('f-end').value='23:00';
+  $('hbadge').textContent=history.length;
+  // wire up live preview on all quote inputs
+  document.getElementById('view-quote').addEventListener('input', updatePreview);
+  document.getElementById('view-quote').addEventListener('change', updatePreview);
+  updatePreview();
+}
+init();
+
+// ══════════════════════════
+// SHARE / CLIENT VIEW
+// ══════════════════════════
+function buildShareData() {
+  const etmap={function:'Private Function',wedding:'Wedding',corporate:'Corporate Event',cocktail:'Cocktail Party','sit-down':'Sit-Down Dinner',other:'Special Event'};
+  const g=parseInt($('f-guests').value)||0;
+  const sub=calcSub();
+  const gstOn=$('f-gst')?.checked;
+  const total=calcTotal();
+  const bd=branding||{};
+
+  return {
+    qnum:S.qnum,
+    vname:$('f-vname').value,
+    vcontact:$('f-vcontact').value,
+    vphone:$('f-vphone').value,
+    vemail:$('f-vemail').value,
+    cname:$('f-cname').value,
+    etype:S.etype,
+    etlabel:etmap[S.etype]||'Event',
+    date:$('f-date').value,
+    start:$('f-start').value,
+    end:$('f-end').value,
+    guests:$('f-guests').value,
+    space:$('f-space').value,
+    pkg:S.pkg,
+    aos:S.aos.map(id=>addons.find(a=>a.id===id)).filter(Boolean),
+    spaceHire:(()=>{const sp=spaces.find(s=>s.name===$('f-space').value);return sp&&sp.hire>0?{name:sp.name,hire:sp.hire}:null;})(),
+    sub:sub,
+    gstOn:gstOn,
+    gstAmt:sub*0.1,
+    total:total,
+    deposit:$('f-deposit').value,
+    notes:$('f-notes').value,
+    terms:$('f-terms').value,
+    valid:$('f-valid').value,
+    issued:new Date().toISOString().split('T')[0],
+    brand:S.brand,
+    logo:S.logo,
+    bank:bd.bank,accname:bd.accname,bsb:bd.bsb,accnum:bd.accnum,
+    payid:bd.payid,stripe:bd.stripe,pmtnote:bd.pmtnote,
+  };
+}
+
+function shareQuote() {
+  saveQuote();
+  const data = buildShareData();
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  const base = window.location.hostname === 'localhost' || window.location.protocol === 'file:' ? 'https://dapper-basbousa-4db3fc.netlify.app' : window.location.href.split('#')[0].split('?')[0];
+  const url = base + '?q=' + encoded;
+  $('share-url').value = url;
+  $('share-overlay').classList.add('on');
+}
+
+function copyShareLink() {
+  navigator.clipboard.writeText($('share-url').value).then(()=>toast('Link copied ✓'));
+}
+
+function shareViaEmail() {
+  const url=$('share-url').value;
+  const client=$('f-cname').value||'there';
+  const vname=$('f-vname').value||'us';
+  const subj=encodeURIComponent(S.qnum+' — Your Event Quote from '+vname);
+  const body=encodeURIComponent('Hi '+client+',\n\nPlease find your event quote at the link below. You can review all the details and accept the quote with one click.\n\n'+url+'\n\nDon\'t hesitate to reach out if you have any questions.\n\nWarm regards,\n'+($('f-vcontact').value||vname));
+  window.location.href='mailto:'+$('f-cemail').value+'?subject='+subj+'&body='+body;
+  closeOverlay2();
+}
+
+function closeOverlay2() { $('share-overlay').classList.remove('on'); }
+
+// ── RENDER CLIENT VIEW ──
+function renderClientView(d) {
+  window._cvData = d; // store for clientAccept
+  // Hide all admin UI
+  $('hdr').style.display='none';
+  $('nav').style.display='none';
+  document.querySelectorAll('.view').forEach(el=>el.style.display='none');
+  $('toast').style.display='none';
+  $('client-view').style.display='block';
+
+  // Apply branding
+  const P=d.brand?.P||'#1a1814', A=d.brand?.A||'#b8965a', AL=d.brand?.AL||'#d4b07a';
+  const r=document.documentElement;
+  r.style.setProperty('--P',P); r.style.setProperty('--A',A); r.style.setProperty('--AL',AL);
+
+  // Header
+  $('cv-hdr').style.background=P;
+  if(d.logo){
+    $('cv-logo-img').src=d.logo; $('cv-logo-img').style.display='block';
+    $('cv-logo-text').style.display='none';
+  } else {
+    $('cv-logo-text').textContent=d.vname||'Venq';
+    $('cv-logo-text').style.color=AL;
+  }
+  $('cv-vname').textContent=d.vname||''; $('cv-vname').style.color='rgba(255,255,255,.6)';
+  $('cv-qnum').textContent=d.qnum;
+  $('cv-issued').textContent=d.issued?new Date(d.issued).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'}):'';
+
+  $('cv-bar').style.background='linear-gradient(90deg,'+P+','+A+','+AL+')';
+
+  // Event title
+  $('cv-etitle').textContent=d.etlabel||'Event Proposal';
+  $('cv-esub').textContent=[d.cname,d.date?new Date(d.date).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}):null,d.guests?d.guests+' guests':null].filter(Boolean).join(' · ');
+
+  // Details grid
+  const dets=[
+    ['Client',d.cname],['Date',d.date?new Date(d.date).toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'—'],
+    ['Time',d.start&&d.end?d.start+' – '+d.end:'—'],['Guests',d.guests?d.guests+' guests':'—'],
+    ['Space',d.space||'—'],['Duration',(()=>{if(!d.start||!d.end)return '—';const sm=toMin(d.start),em=toMin(d.end)+(toMin(d.end)<=toMin(d.start)?1440:0),m=em-sm;return Math.floor(m/60)+'h'+(m%60?' '+m%60+'m':'');})()],
+  ];
+  $('cv-details').innerHTML=dets.map(([k,v])=>`<div><div style="font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9a9088;">${k}</div><div style="font-size:12px;font-weight:500;margin-top:2px;">${v}</div></div>`).join('');
+
+  // Line items
+  let lines='';
+  if(d.pkg){
+    const pc=d.pkg.pp>0?Math.max(d.pkg.pp*(parseInt(d.guests)||0),d.pkg.min):d.pkg.min;
+    lines+=lineRow(d.pkg.name+(d.pkg.pp>0&&d.guests?' ('+d.guests+' × $'+d.pkg.pp+')':''),'$'+pc.toLocaleString(),false);
+    if(d.pkg.incl) lines+=`<div style="padding:6px 16px 10px;font-size:11px;color:#9a9088;line-height:1.6;border-bottom:1px solid #e0d8cc;">${d.pkg.incl}</div>`;
+  }
+  if(d.spaceHire) lines+=lineRow('Room Hire — '+d.spaceHire.name,'$'+d.spaceHire.hire.toLocaleString(),false);
+  (d.aos||[]).forEach(a=>{ lines+=lineRow(a.name,'$'+a.price.toLocaleString(),false); });
+  if(d.deposit&&parseInt(d.deposit)>0) lines+=lineRow('Deposit Required','$'+parseInt(d.deposit).toLocaleString(),true,A);
+  $('cv-lines').innerHTML=lines||'<div style="padding:14px 16px;font-size:12px;color:#9a9088;">No items</div>';
+
+  // Total
+  $('cv-total-box').style.background=P;
+  $('cv-total').style.color=AL;
+  $('cv-total').textContent='$'+(d.total||0).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2})+(d.gstOn?' inc. GST':'');
+  if(d.gstOn&&d.sub>0) $('cv-gst-note').textContent='Ex GST $'+d.sub.toLocaleString('en-AU',{minimumFractionDigits:2})+' + GST $'+d.gstAmt.toLocaleString('en-AU',{minimumFractionDigits:2});
+
+  // Notes & Terms
+  if(d.notes){ $('cv-notes').textContent=d.notes; $('cv-notes-wrap').style.display='block'; }
+  if(d.terms){ $('cv-terms').textContent=d.terms; $('cv-terms-wrap').style.display='block'; }
+
+  // Accept button
+  $('cv-accept-btn').style.background=A;
+  $('cv-accept-btn').style.color='white';
+
+  // Stripe
+  if(d.stripe){
+    $('cv-stripe-btn').href=d.stripe;
+    $('cv-stripe-btn').style.display='block';
+    $('cv-stripe-btn').style.borderColor=A;
+    $('cv-stripe-btn').style.color=A;
+  }
+
+  // Payment details
+  const hasPmt=d.bsb||d.accnum||d.payid;
+  if(hasPmt||d.pmtnote){
+    $('cv-payment-wrap').style.display='block';
+    let pg='';
+    if(d.bank) pg+=pmtItem('Bank',d.bank);
+    if(d.accname) pg+=pmtItem('Account',d.accname);
+    if(d.bsb) pg+=pmtItem('BSB',d.bsb);
+    if(d.accnum) pg+=pmtItem('Acc No.',d.accnum);
+    if(d.payid) pg+=`<div style="grid-column:1/-1;">${pmtItem('PayID',d.payid)}</div>`;
+    pg+=`<div style="grid-column:1/-1;">${pmtItem('Reference',d.qnum)}</div>`;
+    $('cv-pmt-grid').innerHTML=pg;
+    if(d.pmtnote){ $('cv-pmt-note').textContent=d.pmtnote; $('cv-pmt-note').style.display='block'; }
+  }
+
+  // Footer
+  $('cv-contact').textContent=d.vcontact||d.vname||'—';
+  $('cv-contact-details').textContent=[d.vphone,d.vemail].filter(Boolean).join(' · ');
+  if(d.valid) $('cv-valid').textContent='Valid until '+new Date(d.valid).toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+  $('cv-valid').style.color=A;
+  $('cv-accepted-venue').textContent=d.vname||'the venue';
+
+  // Page title
+  document.title=d.qnum+' — '+d.etlabel+' | '+d.vname;
+}
+
+function lineRow(name,price,highlight,color){
+  const s=highlight?'border-top:2px solid #e0d8cc;margin-top:4px;':'';
+  const c=color?'style="color:'+color+'"':'';
+  return `<div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #e0d8cc;font-size:12px;${s}"><span style="color:#4a4540;">${name}</span><span style="font-weight:500;" ${c}>${price}</span></div>`;
+}
+
+function pmtItem(k,v){ return `<div><div style="font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9a9088;">${k}</div><div style="font-size:12px;font-weight:500;margin-top:2px;">${v}</div></div>`; }
+
+function clientAccept() {
+  // Show accepted state immediately
+  $('cv-actions').style.display='none';
+  $('cv-accepted').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  // Fire EmailJS notification to venue
+  try {
+    emailjs.init('C9Q3ftUJxuJWmyC5G');
+    const d = window._cvData || {};
+    emailjs.send('service_trm6wgv', 'template_vsl03dv', {
+      quote_num:   d.qnum || '—',
+      client_name: d.cname || '—',
+      client_email:d.cemail || '—',
+      event_type:  d.etlabel || '—',
+      event_date:  d.date ? new Date(d.date).toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : '—',
+      guests:      d.guests ? d.guests + ' guests' : '—',
+      package:     d.pkg ? d.pkg.name : '—',
+      total:       d.total ? '$' + d.total.toLocaleString('en-AU',{minimumFractionDigits:2}) : '—',
+      name:        d.cname || 'Client',
+      email:       d.cemail || '',
+    }).then(() => {
+      console.log('Venue notified');
+    }).catch(err => {
+      console.warn('EmailJS error:', err);
+    });
+  } catch(e) {
+    console.warn('EmailJS not loaded:', e);
+  }
+}
+
+// ── CHECK URL ON LOAD ──
+(function checkURL(){
+  const params=new URLSearchParams(window.location.search);
+  const q=params.get('q');
+  if(!q) return;
+  try {
+    const data=JSON.parse(decodeURIComponent(escape(atob(q))));
+    // Wait for DOM then render
+    if(document.readyState==='loading'){
+      document.addEventListener('DOMContentLoaded',()=>renderClientView(data));
+    } else {
+      renderClientView(data);
+    }
+  } catch(e){ console.error('Invalid quote link',e); }
+})();
+
+</script>
+
+<!-- SHARE MODAL -->
+<div class="overlay" id="share-overlay">
+  <div class="modal">
+    <div class="modal-title">Send Quote Link to Client</div>
+    <div style="font-size:13px;color:var(--mid);margin-bottom:16px;line-height:1.6;">
+      This link opens a clean branded quote page for your client — no admin interface, just the quote. They can review it and accept with one click.
+    </div>
+    <div class="fgrp" style="margin-bottom:14px;">
+      <label>Client Quote Link</label>
+      <div style="display:flex;gap:8px;">
+        <input class="fi" id="share-url" type="text" readonly style="font-size:11px;color:var(--light);">
+        <button class="btn btn-p" style="white-space:nowrap;padding:10px 16px;" onclick="copyShareLink()">Copy</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--light);margin-bottom:4px;">💡 Save your quote first, then share this link. The client sees your branding, the quote details, and can accept or pay deposit online.</div>
+    <div class="modal-btns">
+      <button class="btn btn-g" onclick="closeOverlay2()">Close</button>
+      <button class="btn btn-a" onclick="shareViaEmail()">✉ Email to Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT VIEW — shown when URL contains quote data -->
+<div id="client-view" style="display:none;">
+  <div id="cv-wrap" style="min-height:100vh;background:#faf8f4;padding:40px 20px;">
+    <div id="cv-card" style="max-width:680px;margin:0 auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.12);">
+
+      <!-- Header -->
+      <div id="cv-hdr" style="padding:24px 32px;display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <img id="cv-logo-img" src="" alt="" style="max-height:48px;max-width:140px;object-fit:contain;display:none;margin-bottom:6px;">
+          <div id="cv-logo-text" style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;letter-spacing:.06em;"></div>
+          <div id="cv-vname" style="font-size:12px;font-weight:500;margin-top:3px;opacity:.7;"></div>
+        </div>
+        <div style="text-align:right;font-size:11px;opacity:.5;line-height:1.9;">
+          <div id="cv-qnum"></div>
+          <div id="cv-issued"></div>
+        </div>
+      </div>
+      <div id="cv-bar" style="height:3px;"></div>
+
+      <!-- Body -->
+      <div style="padding:28px 32px;">
+        <div id="cv-etitle" style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;margin-bottom:4px;"></div>
+        <div id="cv-esub" style="font-size:12px;color:#9a9088;margin-bottom:24px;"></div>
+
+        <!-- Event details grid -->
+        <div id="cv-details" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px;background:#f5f2ec;border-radius:8px;margin-bottom:24px;"></div>
+
+        <!-- Line items -->
+        <div style="font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#9a9088;margin-bottom:10px;">Quote Summary</div>
+        <div id="cv-lines" style="margin-bottom:20px;border:1px solid #e0d8cc;border-radius:8px;overflow:hidden;"></div>
+
+        <!-- Total -->
+        <div id="cv-total-box" style="border-radius:8px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+          <div>
+            <div style="font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;opacity:.5;color:white;">Total Investment</div>
+            <div id="cv-gst-note" style="font-size:10px;opacity:.4;color:white;margin-top:2px;"></div>
+          </div>
+          <div id="cv-total" style="font-family:'Cormorant Garamond',serif;font-size:30px;"></div>
+        </div>
+
+        <!-- Notes -->
+        <div id="cv-notes-wrap" style="display:none;margin-bottom:20px;">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#9a9088;margin-bottom:8px;">Notes</div>
+          <div id="cv-notes" style="font-size:13px;color:#4a4540;line-height:1.7;padding:14px;background:#f5f2ec;border-radius:6px;"></div>
+        </div>
+
+        <!-- Terms -->
+        <div id="cv-terms-wrap" style="display:none;margin-bottom:24px;">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#9a9088;margin-bottom:8px;">Terms & Conditions</div>
+          <div id="cv-terms" style="font-size:12px;color:#9a9088;line-height:1.7;"></div>
+        </div>
+
+        <!-- ACCEPT + PAY -->
+        <div id="cv-actions" style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">
+          <button id="cv-accept-btn" onclick="clientAccept()" style="font-family:'Jost',sans-serif;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:16px;border-radius:6px;cursor:pointer;border:none;width:100%;transition:all .2s;">✓ Accept This Quote</button>
+          <a id="cv-stripe-btn" href="#" target="_blank" style="display:none;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:14px;border-radius:6px;text-align:center;text-decoration:none;border:2px solid;transition:all .2s;">💳 Pay Deposit Online</a>
+        </div>
+
+        <!-- Accepted state -->
+        <div id="cv-accepted" style="display:none;text-align:center;padding:24px;background:#f0faf4;border:2px solid #27ae60;border-radius:8px;margin-bottom:24px;">
+          <div style="font-size:28px;margin-bottom:8px;">✅</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;color:#27ae60;margin-bottom:4px;">Quote Accepted</div>
+          <div style="font-size:13px;color:#4a4540;">Thank you! The team at <span id="cv-accepted-venue"></span> will be in touch shortly to confirm your booking.</div>
+        </div>
+
+        <!-- Payment details -->
+        <div id="cv-payment-wrap" style="display:none;padding:18px;background:#f5f2ec;border-radius:8px;margin-bottom:24px;">
+          <div style="font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#9a9088;margin-bottom:12px;">Payment Details</div>
+          <div id="cv-pmt-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;"></div>
+          <div id="cv-pmt-note" style="font-size:11px;color:#4a4540;line-height:1.6;display:none;"></div>
+        </div>
+
+        <!-- Footer -->
+        <div style="border-top:1px solid #e0d8cc;padding-top:18px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:11px;color:#9a9088;line-height:1.7;">
+            Prepared by <span id="cv-contact" style="font-weight:500;"></span><br>
+            <span id="cv-contact-details"></span>
+          </div>
+          <div id="cv-valid" style="font-size:11px;font-weight:500;"></div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:20px;font-size:11px;color:#c0b8b0;">Powered by <a href="https://venq.com.au" style="color:#b8965a;text-decoration:none;">Venq</a></div>
+  </div>
+</div>
+
+</body>
+</html>
