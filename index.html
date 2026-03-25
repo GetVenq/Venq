@@ -302,17 +302,13 @@ function submitFeedback() {
   btn.disabled = true;
 
   emailjs.init('C9Q3ftUJxuJWmyC5G');
-  emailjs.send('service_trm6wgv', 'template_vsl03dv', {
-    quote_num: 'FEEDBACK',
-    client_name: email || 'Anonymous',
-    client_email: email || 'No email provided',
-    event_type: 'Rating: ' + (fbRating ? fbRating + '/5 stars' : 'Not rated'),
-    event_date: new Date().toLocaleDateString('en-AU'),
-    guests: like || 'Nothing noted',
-    package: improve || 'Nothing noted',
-    total: window.location.hostname,
-    name: email || 'Venq User',
-    email: email || 'getvenq@gmail.com',
+  emailjs.send('service_trm6wgv', 'template_uiqns2a', {
+    rating: fbRating ? fbRating + '/5 stars' : 'Not rated',
+    liked: like || 'Nothing noted',
+    improve: improve || 'Nothing noted',
+    from_email: email || 'No email provided',
+    date: new Date().toLocaleDateString('en-AU'),
+    source: window.location.hostname,
   }).then(() => {
     closeFeedback();
     toast('Thanks for your feedback! 🙏');
@@ -1556,17 +1552,13 @@ function submitFeedback() {
   btn.disabled = true;
 
   emailjs.init('C9Q3ftUJxuJWmyC5G');
-  emailjs.send('service_trm6wgv', 'template_vsl03dv', {
-    quote_num: 'FEEDBACK',
-    client_name: email || 'Anonymous',
-    client_email: email || 'No email provided',
-    event_type: 'Rating: ' + (fbRating ? fbRating + '/5 stars' : 'Not rated'),
-    event_date: new Date().toLocaleDateString('en-AU'),
-    guests: like || 'Nothing noted',
-    package: improve || 'Nothing noted',
-    total: window.location.hostname,
-    name: email || 'Venq User',
-    email: email || 'getvenq@gmail.com',
+  emailjs.send('service_trm6wgv', 'template_uiqns2a', {
+    rating: fbRating ? fbRating + '/5 stars' : 'Not rated',
+    liked: like || 'Nothing noted',
+    improve: improve || 'Nothing noted',
+    from_email: email || 'No email provided',
+    date: new Date().toLocaleDateString('en-AU'),
+    source: window.location.hostname,
   }).then(() => {
     closeFeedback();
     toast('Thanks for your feedback! 🙏');
