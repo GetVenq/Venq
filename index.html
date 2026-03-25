@@ -1268,7 +1268,7 @@ function shareQuote() {
   saveQuote();
   const data = buildShareData();
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-  const base = window.location.hostname === 'localhost' || window.location.protocol === 'file:' ? 'https://dapper-basbousa-4db3fc.netlify.app' : window.location.href.split('#')[0].split('?')[0];
+  const base = window.location.protocol === 'file:' ? 'https://venq.com.au' : window.location.href.split('#')[0].split('?')[0];
   const url = base + '?q=' + encoded;
   $('share-url').value = url;
   $('share-overlay').classList.add('on');
