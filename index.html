@@ -422,7 +422,7 @@ input[type=color] { width:40px; height:32px; padding:2px; border-radius:3px; cur
         <div class="qp-pmt-title">Payment Details</div>
         <div class="qp-pmt-grid" id="pv-pmtgrid"></div>
         <div class="qp-pmt-note" id="pv-pmtnote"></div>
-        <a class="qp-stripe" id="pv-stripe" href="#" target="_blank">💳 Pay Deposit Online</a>
+
       </div>
     </div>
     <div class="prev-btns">
@@ -510,7 +510,7 @@ input[type=color] { width:40px; height:32px; padding:2px; border-radius:3px; cur
       <div class="fgrp"><label>BSB</label><input class="fi" id="br-bsb" type="text" placeholder="062-000"></div>
       <div class="fgrp"><label>Account Number</label><input class="fi" id="br-accnum" type="text" placeholder="12345678"></div>
       <div class="fgrp full"><label>PayID (optional)</label><input class="fi" id="br-payid" type="text" placeholder="events@venue.com.au or 0400 000 000"></div>
-      <div class="fgrp full"><label>Stripe Link (optional)</label><input class="fi" id="br-stripe" type="url" placeholder="https://buy.stripe.com/..."></div>
+
       <div class="fgrp full"><label>Payment Instructions</label><textarea class="fi" id="br-pmtnote" placeholder="e.g. Use your quote number as payment reference. Deposit required within 48hrs."></textarea></div>
     </div>
     <div style="margin-top:20px;"><button class="btn btn-a" onclick="saveBranding()">Save Branding</button></div>
@@ -881,7 +881,7 @@ function updatePreview() {
 
 function renderPaymentPreview() {
   const bd = branding||{};
-  const has = bd.bsb||bd.accnum||bd.payid||bd.stripe||bd.pmtnote;
+  const has = bd.bsb||bd.accnum||bd.payid||bd.pmtnote;
   const pmtEl = $('pv-payment');
   if (!has) { pmtEl.style.display='none'; return; }
   pmtEl.style.display='block';
@@ -896,8 +896,7 @@ function renderPaymentPreview() {
   $('pv-pmtgrid').innerHTML=g;
   $('pv-pmtnote').textContent=bd.pmtnote||'';
   $('pv-pmtnote').style.display=bd.pmtnote?'block':'none';
-  const stripeEl=$('pv-stripe');
-  if(bd.stripe){ stripeEl.href=bd.stripe; stripeEl.style.display='block'; } else stripeEl.style.display='none';
+  // Stripe button removed from quote preview
 }
 
 function item(k,v){ return `<div class="qp-pmt-item"><label>${k}</label><span>${v}</span></div>`; }
@@ -1150,7 +1149,7 @@ function openEmail() {
     if(bd.payid) pmtBlock+='PayID: '+bd.payid+'\n';
     pmtBlock+='Reference: '+S.qnum+'\n';
   }
-  if(bd.stripe) pmtBlock+='\nPay online: '+bd.stripe+'\n';
+  // Stripe link removed from email
   if(bd.pmtnote) pmtBlock+='\n'+bd.pmtnote+'\n';
 
   const body=`Hi ${cn},
@@ -1359,13 +1358,7 @@ function renderClientView(d) {
   $('cv-accept-btn').style.background=A;
   $('cv-accept-btn').style.color='white';
 
-  // Stripe
-  if(d.stripe){
-    $('cv-stripe-btn').href=d.stripe;
-    $('cv-stripe-btn').style.display='block';
-    $('cv-stripe-btn').style.borderColor=A;
-    $('cv-stripe-btn').style.color=A;
-  }
+  // Stripe button removed
 
   // Payment details
   const hasPmt=d.bsb||d.accnum||d.payid;
@@ -1527,7 +1520,7 @@ function clientAccept() {
         <!-- ACCEPT + PAY -->
         <div id="cv-actions" style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">
           <button id="cv-accept-btn" onclick="clientAccept()" style="font-family:'Jost',sans-serif;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:16px;border-radius:6px;cursor:pointer;border:none;width:100%;transition:all .2s;">✓ Accept This Quote</button>
-          <a id="cv-stripe-btn" href="#" target="_blank" style="display:none;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:14px;border-radius:6px;text-align:center;text-decoration:none;border:2px solid;transition:all .2s;">💳 Pay Deposit Online</a>
+
         </div>
 
         <!-- Accepted state -->
