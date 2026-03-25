@@ -492,6 +492,90 @@ input[type=color] { width:40px; height:32px; padding:2px; border-radius:3px; cur
   .lp-footer { flex-direction:column;gap:12px;text-align:center; }
 }
 
+
+/* ── AUTH ── */
+#auth-screen {
+  display:none;
+  min-height:100vh;
+  background:#0e0c09;
+  align-items:center;
+  justify-content:center;
+  font-family:'Jost',sans-serif;
+  padding:24px;
+}
+.auth-card {
+  background:#1a1814;
+  border:1px solid rgba(184,150,90,.2);
+  border-radius:12px;
+  padding:48px;
+  width:100%;
+  max-width:420px;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+  position:relative;
+  overflow:hidden;
+}
+.auth-card::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,#b8965a,transparent);
+}
+.auth-logo {
+  font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;
+  color:#d4b07a;letter-spacing:.06em;text-align:center;margin-bottom:6px;
+}
+.auth-sub {
+  font-size:11px;color:rgba(255,255,255,.3);letter-spacing:.1em;
+  text-transform:uppercase;text-align:center;margin-bottom:36px;
+}
+.auth-title {
+  font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;
+  color:white;margin-bottom:24px;
+}
+.auth-field { display:flex;flex-direction:column;gap:6px;margin-bottom:16px; }
+.auth-label {
+  font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:rgba(255,255,255,.4);
+}
+.auth-input {
+  font-family:'Jost',sans-serif;font-size:14px;color:white;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:4px;padding:12px 14px;outline:none;width:100%;
+  transition:border-color .2s;
+}
+.auth-input:focus { border-color:#b8965a; }
+.auth-input::placeholder { color:rgba(255,255,255,.2); }
+.auth-btn {
+  width:100%;padding:14px;background:#b8965a;color:white;border:none;
+  border-radius:4px;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  transition:all .2s;margin-top:8px;
+}
+.auth-btn:hover { background:#d4b07a; }
+.auth-switch {
+  text-align:center;margin-top:20px;font-size:12px;color:rgba(255,255,255,.3);
+}
+.auth-switch a {
+  color:#b8965a;cursor:pointer;text-decoration:underline;
+}
+.auth-error {
+  background:rgba(224,82,82,.15);border:1px solid rgba(224,82,82,.3);
+  border-radius:4px;padding:10px 14px;font-size:12px;color:#e05252;
+  margin-bottom:16px;display:none;
+}
+.auth-error.show { display:block; }
+.auth-trial-badge {
+  background:rgba(184,150,90,.15);border:1px solid rgba(184,150,90,.25);
+  border-radius:4px;padding:10px 14px;font-size:11px;color:#d4b07a;
+  text-align:center;margin-bottom:20px;letter-spacing:.03em;
+}
+.auth-expired {
+  background:rgba(224,82,82,.1);border:1px solid rgba(224,82,82,.2);
+  border-radius:8px;padding:24px;text-align:center;
+}
+.auth-expired-title {
+  font-family:'Cormorant Garamond',serif;font-size:22px;color:white;margin-bottom:8px;
+}
+.auth-expired-text { font-size:13px;color:rgba(255,255,255,.4);margin-bottom:20px;line-height:1.6; }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js">
 // ══════════════════════════
@@ -559,25 +643,137 @@ function submitFeedback() {
 }
 
 
-// ── LANDING PAGE ──
-function launchApp() {
+// landing launch handled by auth system
+
+
+// ══════════════════════════
+// AUTH
+// ══════════════════════════
+function getAccounts() { try { return JSON.parse(localStorage.getItem('vq_accounts')||'{}'); } catch(e){ return {}; } }
+function saveAccounts(a) { localStorage.setItem('vq_accounts', JSON.stringify(a)); }
+function getCurrentUser() { try { return JSON.parse(localStorage.getItem('vq_current_user')||'null'); } catch(e){ return null; } }
+function setCurrentUser(u) { localStorage.setItem('vq_current_user', JSON.stringify(u)); }
+
+function showAuthScreen(form) {
   document.getElementById('landing').style.display='none';
-  document.getElementById('hdr').style.display='flex';
-  document.getElementById('nav').style.display='flex';
-  document.getElementById('view-quote').classList.add('on');
-  document.getElementById('ntab-quote').classList.add('on');
-  updatePreview();
+  document.getElementById('hdr').style.display='none';
+  document.getElementById('nav').style.display='none';
+  document.querySelectorAll('.view').forEach(el=>el.style.display='none');
+  const as = document.getElementById('auth-screen');
+  as.style.display='flex';
+  document.getElementById('auth-signup').style.display = form==='signup' ? 'block' : 'none';
+  document.getElementById('auth-login').style.display  = form==='login'  ? 'block' : 'none';
+  document.getElementById('auth-expired').style.display = 'none';
 }
 
-// Hide app elements on initial load (landing shows first)
-(function() {
+function showLogin()  { document.getElementById('auth-signup').style.display='none'; document.getElementById('auth-login').style.display='block'; document.getElementById('auth-expired').style.display='none'; }
+function showSignup() { document.getElementById('auth-login').style.display='none'; document.getElementById('auth-signup').style.display='block'; document.getElementById('auth-expired').style.display='none'; }
+
+function doSignup() {
+  const venue = document.getElementById('su-venue').value.trim();
+  const name  = document.getElementById('su-name').value.trim();
+  const email = document.getElementById('su-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('su-pass').value;
+  const errEl = document.getElementById('signup-error');
+  errEl.classList.remove('show');
+
+  if (!venue||!name||!email||!pass) { errEl.textContent='Please fill in all fields.'; errEl.classList.add('show'); return; }
+  if (pass.length < 6) { errEl.textContent='Password must be at least 6 characters.'; errEl.classList.add('show'); return; }
+  if (!/\S+@\S+\.\S+/.test(email)) { errEl.textContent='Please enter a valid email address.'; errEl.classList.add('show'); return; }
+
+  const accounts = getAccounts();
+  if (accounts[email]) { errEl.textContent='An account with this email already exists.'; errEl.classList.add('show'); return; }
+
+  const user = { venue, name, email, pass, trialStart: Date.now(), active: true };
+  accounts[email] = user;
+  saveAccounts(accounts);
+  setCurrentUser(user);
+  enterApp(user);
+}
+
+function doLogin() {
+  const email = document.getElementById('li-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('li-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.classList.remove('show');
+
+  if (!email||!pass) { errEl.textContent='Please enter your email and password.'; errEl.classList.add('show'); return; }
+
+  const accounts = getAccounts();
+  const user = accounts[email];
+  if (!user) { errEl.textContent='No account found with that email.'; errEl.classList.add('show'); return; }
+  if (user.pass !== pass) { errEl.textContent='Incorrect password.'; errEl.classList.add('show'); return; }
+
+  // Check trial
+  const daysUsed = (Date.now() - user.trialStart) / (1000*60*60*24);
+  if (!user.active && daysUsed > 30) {
+    document.getElementById('auth-login').style.display='none';
+    document.getElementById('auth-expired').style.display='block';
+    return;
+  }
+
+  setCurrentUser(user);
+  enterApp(user);
+}
+
+function enterApp(user) {
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('landing').style.display='none';
+  document.getElementById('app-wrapper').style.display='block';
+  // pre-fill venue name from account
+  if (user.venue && document.getElementById('f-vname')) {
+    document.getElementById('f-vname').value = user.venue;
+    if (document.getElementById('br-vname')) document.getElementById('br-vname').value = user.venue;
+  }
+  showView('quote');
+  updatePreview();
+  // Show trial remaining if within 30 days
+  const daysUsed = (Date.now() - user.trialStart) / (1000*60*60*24);
+  const daysLeft = Math.max(0, 30 - Math.floor(daysUsed));
+  if (daysLeft <= 7) toast('Trial: ' + daysLeft + ' days remaining');
+}
+
+function doLogout() {
+  setCurrentUser(null);
+  document.getElementById('app-wrapper').style.display='none';
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('landing').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+
+
+function launchApp() {
+  showAuthScreen('signup');
+}
+
+// Log In button on landing goes straight to login form
+function showLandingLogin() {
+  showAuthScreen('login');
+}
+
+// Check auth on load
+(function checkAuth() {
   document.addEventListener('DOMContentLoaded', function() {
-    // Check if coming from a quote link — if so skip landing
     const params = new URLSearchParams(window.location.search);
-    if (params.get('q')) return; // client view handles this
-    // Otherwise hide app, show landing
-    document.getElementById('hdr').style.display='none';
-    document.getElementById('nav').style.display='none';
+    if (params.get('q')) return; // client quote link — skip auth
+
+    const user = getCurrentUser();
+    if (user) {
+      const accounts = getAccounts();
+      const fresh = accounts[user.email] || user;
+      const daysUsed = (Date.now() - fresh.trialStart) / (1000*60*60*24);
+      if (!fresh.active && daysUsed > 30) {
+        showAuthScreen('login');
+        document.getElementById('auth-login').style.display='none';
+        document.getElementById('auth-expired').style.display='block';
+        return;
+      }
+      enterApp(fresh);
+    } else {
+      // Show landing page — app-wrapper is already hidden
+      document.getElementById('landing').style.display='block';
+    }
   });
 })();
 
@@ -587,6 +783,51 @@ function launchApp() {
 
 <!-- HEADER -->
 
+
+<!-- ═══ AUTH SCREEN ═══ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">Venq</div>
+    <div class="auth-sub">Venue Quote Software</div>
+
+    <!-- SIGNUP FORM -->
+    <div id="auth-signup">
+      <div class="auth-title">Start your free trial</div>
+      <div class="auth-trial-badge">✓ 30 days free — no credit card required</div>
+      <div class="auth-error" id="signup-error"></div>
+      <div class="auth-field"><label class="auth-label">Venue Name</label><input class="auth-input" id="su-venue" type="text" placeholder="e.g. The Rooftop Bar"></div>
+      <div class="auth-field"><label class="auth-label">Your Name</label><input class="auth-input" id="su-name" type="text" placeholder="e.g. Lucas Reid"></div>
+      <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="su-email" type="email" placeholder="you@venue.com.au"></div>
+      <div class="auth-field"><label class="auth-label">Password</label><input class="auth-input" id="su-pass" type="password" placeholder="Min. 6 characters"></div>
+      <button class="auth-btn" onclick="doSignup()">Create Account & Start Trial</button>
+      <div class="auth-switch">Already have an account? <a onclick="showLogin()">Log in</a></div>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="auth-login" style="display:none;">
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-error" id="login-error"></div>
+      <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="li-email" type="email" placeholder="you@venue.com.au"></div>
+      <div class="auth-field"><label class="auth-label">Password</label><input class="auth-input" id="li-pass" type="password" placeholder="Your password"></div>
+      <button class="auth-btn" onclick="doLogin()">Log In</button>
+      <div class="auth-switch">No account yet? <a onclick="showSignup()">Start free trial</a></div>
+    </div>
+
+    <!-- EXPIRED -->
+    <div id="auth-expired" style="display:none;">
+      <div class="auth-expired">
+        <div class="auth-expired-title">Trial Ended</div>
+        <div class="auth-expired-text">Your 30-day free trial has expired. Subscribe to keep using Venq — $99/month, cancel anytime.</div>
+        <a href="https://buy.stripe.com/cNi6oGfuXerd7oY29G83C00" target="_blank" class="auth-btn" style="display:block;text-decoration:none;text-align:center;padding:14px;">Subscribe — $99/month</a>
+        <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,.3);text-align:center;">After subscribing, email <span style="color:#d4b07a;">getvenq@gmail.com</span> to activate your account.</div>
+      </div>
+      <div class="auth-switch" style="margin-top:16px;"><a onclick="showLogin()">← Back to login</a></div>
+    </div>
+
+  </div>
+</div>
+<!-- /AUTH SCREEN -->
+
 <!-- ═══ LANDING PAGE ═══ -->
 <div id="landing">
 
@@ -594,7 +835,7 @@ function launchApp() {
   <nav class="lp-nav">
     <div class="lp-logo">Venq</div>
     <div class="lp-nav-btns">
-      <button class="lp-btn-ghost" onclick="launchApp()">Log In</button>
+      <button class="lp-btn-ghost" onclick="showLandingLogin()">Log In</button>
       <button class="lp-btn-solid" onclick="launchApp()">Start Free Trial</button>
     </div>
   </nav>
@@ -784,6 +1025,7 @@ function launchApp() {
 <!-- /LANDING PAGE -->
 
 
+<div id="app-wrapper" style="display:none;">
 <div id="hdr">
   <div style="display:flex;align-items:baseline;cursor:pointer;" onclick="showView('quote')">
     <span class="logo">Venq</span>
@@ -797,6 +1039,7 @@ function launchApp() {
       <div class="dot" id="dot-3"></div>
     </div>
     <button class="hdr-save" id="hdr-save-btn" onclick="saveQuote()" style="display:none;">💾 Save</button>
+    <button class="hdr-save" onclick="doLogout()" style="opacity:.5;">Sign Out</button>
   </div>
 </div>
 
@@ -1057,6 +1300,7 @@ function launchApp() {
 </div>
 
 <div class="toast" id="toast"></div>
+</div><!-- /app-wrapper -->
 
 <script>
 // ══════════════════════════
