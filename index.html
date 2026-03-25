@@ -256,7 +256,76 @@ input[type=color] { width:40px; height:32px; padding:2px; border-radius:3px; cur
   .qp-stripe { display:none !important; }
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js">
+// ══════════════════════════
+// FEEDBACK
+// ══════════════════════════
+let fbRating = 0;
+
+function openFeedback() {
+  fbRating = 0;
+  document.getElementById('fb-like').value = '';
+  document.getElementById('fb-improve').value = '';
+  document.getElementById('fb-email').value = '';
+  updateStars(0);
+  document.getElementById('feedback-overlay').classList.add('on');
+}
+
+function closeFeedback() {
+  document.getElementById('feedback-overlay').classList.remove('on');
+}
+
+function setStar(val) {
+  fbRating = val;
+  updateStars(val);
+}
+
+function updateStars(val) {
+  document.querySelectorAll('.star').forEach((s, i) => {
+    s.textContent = i < val ? '⭐' : '☆';
+    s.style.fontSize = i < val ? '30px' : '26px';
+  });
+}
+
+function submitFeedback() {
+  const like = document.getElementById('fb-like').value.trim();
+  const improve = document.getElementById('fb-improve').value.trim();
+  const email = document.getElementById('fb-email').value.trim();
+
+  if (!fbRating && !like && !improve) {
+    toast('Please fill in at least one field');
+    return;
+  }
+
+  const btn = document.getElementById('fb-submit-btn');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+
+  emailjs.init('C9Q3ftUJxuJWmyC5G');
+  emailjs.send('service_trm6wgv', 'template_vsl03dv', {
+    quote_num: 'FEEDBACK',
+    client_name: email || 'Anonymous',
+    client_email: email || 'No email provided',
+    event_type: 'Rating: ' + (fbRating ? fbRating + '/5 stars' : 'Not rated'),
+    event_date: new Date().toLocaleDateString('en-AU'),
+    guests: like || 'Nothing noted',
+    package: improve || 'Nothing noted',
+    total: window.location.hostname,
+    name: email || 'Venq User',
+    email: email || 'getvenq@gmail.com',
+  }).then(() => {
+    closeFeedback();
+    toast('Thanks for your feedback! 🙏');
+    btn.textContent = 'Send Feedback';
+    btn.disabled = false;
+  }).catch(() => {
+    toast('Something went wrong — please try again');
+    btn.textContent = 'Send Feedback';
+    btn.disabled = false;
+  });
+}
+
+</script>
 </head>
 <body>
 
@@ -1441,6 +1510,75 @@ function clientAccept() {
   } catch(e){ console.error('Invalid quote link',e); }
 })();
 
+
+// ══════════════════════════
+// FEEDBACK
+// ══════════════════════════
+let fbRating = 0;
+
+function openFeedback() {
+  fbRating = 0;
+  document.getElementById('fb-like').value = '';
+  document.getElementById('fb-improve').value = '';
+  document.getElementById('fb-email').value = '';
+  updateStars(0);
+  document.getElementById('feedback-overlay').classList.add('on');
+}
+
+function closeFeedback() {
+  document.getElementById('feedback-overlay').classList.remove('on');
+}
+
+function setStar(val) {
+  fbRating = val;
+  updateStars(val);
+}
+
+function updateStars(val) {
+  document.querySelectorAll('.star').forEach((s, i) => {
+    s.textContent = i < val ? '⭐' : '☆';
+    s.style.fontSize = i < val ? '30px' : '26px';
+  });
+}
+
+function submitFeedback() {
+  const like = document.getElementById('fb-like').value.trim();
+  const improve = document.getElementById('fb-improve').value.trim();
+  const email = document.getElementById('fb-email').value.trim();
+
+  if (!fbRating && !like && !improve) {
+    toast('Please fill in at least one field');
+    return;
+  }
+
+  const btn = document.getElementById('fb-submit-btn');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+
+  emailjs.init('C9Q3ftUJxuJWmyC5G');
+  emailjs.send('service_trm6wgv', 'template_vsl03dv', {
+    quote_num: 'FEEDBACK',
+    client_name: email || 'Anonymous',
+    client_email: email || 'No email provided',
+    event_type: 'Rating: ' + (fbRating ? fbRating + '/5 stars' : 'Not rated'),
+    event_date: new Date().toLocaleDateString('en-AU'),
+    guests: like || 'Nothing noted',
+    package: improve || 'Nothing noted',
+    total: window.location.hostname,
+    name: email || 'Venq User',
+    email: email || 'getvenq@gmail.com',
+  }).then(() => {
+    closeFeedback();
+    toast('Thanks for your feedback! 🙏');
+    btn.textContent = 'Send Feedback';
+    btn.disabled = false;
+  }).catch(() => {
+    toast('Something went wrong — please try again');
+    btn.textContent = 'Send Feedback';
+    btn.disabled = false;
+  });
+}
+
 </script>
 
 <!-- SHARE MODAL -->
@@ -1548,6 +1686,50 @@ function clientAccept() {
       </div>
     </div>
     <div style="text-align:center;margin-top:20px;font-size:11px;color:#c0b8b0;">Powered by <a href="https://venq.com.au" style="color:#b8965a;text-decoration:none;">Venq</a></div>
+  </div>
+</div>
+
+
+<!-- FEEDBACK BUTTON & MODAL -->
+<button id="feedback-btn" onclick="openFeedback()" style="position:fixed;bottom:24px;right:24px;z-index:500;background:var(--P);color:var(--AL);font-family:'Jost',sans-serif;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:10px 18px;border-radius:20px;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:all .2s;">
+  💬 Feedback
+</button>
+
+<div class="overlay" id="feedback-overlay">
+  <div class="modal">
+    <div class="modal-title">Share Your Feedback</div>
+    <div style="font-size:13px;color:var(--mid);margin-bottom:20px;">Help us improve Venq — takes 30 seconds.</div>
+
+    <div class="fgrp" style="margin-bottom:16px;">
+      <label>How would you rate Venq overall?</label>
+      <div id="star-row" style="display:flex;gap:8px;margin-top:8px;">
+        <span class="star" data-val="1" onclick="setStar(1)" style="font-size:28px;cursor:pointer;transition:transform .1s;">⭐</span>
+        <span class="star" data-val="2" onclick="setStar(2)" style="font-size:28px;cursor:pointer;transition:transform .1s;">⭐</span>
+        <span class="star" data-val="3" onclick="setStar(3)" style="font-size:28px;cursor:pointer;transition:transform .1s;">⭐</span>
+        <span class="star" data-val="4" onclick="setStar(4)" style="font-size:28px;cursor:pointer;transition:transform .1s;">⭐</span>
+        <span class="star" data-val="5" onclick="setStar(5)" style="font-size:28px;cursor:pointer;transition:transform .1s;">⭐</span>
+      </div>
+    </div>
+
+    <div class="fgrp" style="margin-bottom:16px;">
+      <label>What do you like most?</label>
+      <textarea class="fi" id="fb-like" placeholder="e.g. Easy to use, looks professional..." style="min-height:64px;"></textarea>
+    </div>
+
+    <div class="fgrp" style="margin-bottom:16px;">
+      <label>What could be better?</label>
+      <textarea class="fi" id="fb-improve" placeholder="e.g. Would love to see..."></textarea>
+    </div>
+
+    <div class="fgrp" style="margin-bottom:4px;">
+      <label>Your email (optional — if you'd like a response)</label>
+      <input class="fi" id="fb-email" type="email" placeholder="you@venue.com.au">
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn btn-g" onclick="closeFeedback()">Cancel</button>
+      <button class="btn btn-a" onclick="submitFeedback()" id="fb-submit-btn">Send Feedback</button>
+    </div>
   </div>
 </div>
 
